@@ -122,7 +122,7 @@ fun TranslationPlayerScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 260.dp) // Leave exact space for the new Horizon player card
+                .padding(bottom = 200.dp) // Leave space for the minimal player card
         ) {
             // --- TOP HEADER ACTION ROW ---
             Row(
@@ -690,9 +690,6 @@ fun TranslationPlayerScreen() {
             onPlayPause = { isPlaying = !isPlaying },
             onRewind = { currentTime = (currentTime - 5).coerceAtLeast(0) },
             onForward = { currentTime = (currentTime + 5).coerceAtMost(duration - 1) },
-            onPrevious = { currentTime = 0 },
-            onNext = { currentTime = 0 },
-            onSeek = { newTime -> currentTime = newTime.coerceIn(0, duration - 1) },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
