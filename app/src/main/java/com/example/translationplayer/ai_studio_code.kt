@@ -7,6 +7,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -74,6 +75,9 @@ fun TranslationPlayerScreen() {
     // Form Toggle States
     var isLoopFormOpen by remember { mutableStateOf(false) }
     var isNoteFormOpen by remember { mutableStateOf(false) }
+    var showProfileSheet by remember { mutableStateOf(false) }
+    var groqApiKey by remember { mutableStateOf("") }
+    var selectedVoiceEngine by remember { mutableStateOf("Default") }
 
     // Selection States
     val selectedDialogueIndices = remember { mutableStateListOf<Int>() }
@@ -103,11 +107,17 @@ fun TranslationPlayerScreen() {
         index
     }
 
-    // Status line for the player card: mode:clean ••• loop:0 ••• speed:1X
+    // Status line: Mode:clean | Loop: one | Speed:2X
     val statusLine = remember(currentSpeed, activeView, savedLoops.size) {
         val viewName = activeView.name.lowercase()
-        val loopCount = savedLoops.size
-        "mode:$viewName ••• loop:$loopCount ••• speed:${currentSpeed}X"
+        val loopWord = when (savedLoops.size) {
+            0 -> "zero"
+            1 -> "one"
+            2 -> "two"
+            3 -> "three"
+            else -> savedLoops.size.toString()
+        }
+        "Mode:$viewName | Loop: $loopWord | Speed:${currentSpeed}X"
     }
 
     // Auto Scroll active dialogue line
@@ -161,12 +171,17 @@ fun TranslationPlayerScreen() {
                             .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.LightGray,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        IconButton(
+                            onClick = { showProfileSheet = !showProfileSheet },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = Color.LightGray,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                     Column {
                         Text(
@@ -183,6 +198,25 @@ fun TranslationPlayerScreen() {
                         )
                     }
                 }
+
+                // Send Translation Button
+                IconButton(
+                    onClick = { /* Navigation to translation screen */ },
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(BrandAccent.copy(alpha = 0.15f))
+                        .border(1.dp, BrandAccent.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Send,
+                        contentDescription = "Send to Translation",
+                        tint = BrandAccent,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Consolidated Right Control Hub
                 Row(
@@ -353,7 +387,7 @@ fun TranslationPlayerScreen() {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                                            .padding(horizontal = 18.dp, vertical = 10.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -742,7 +776,7 @@ fun TranslationPlayerScreen() {
             }
         }
 
-        // --- NEW HORIZON MUSIC PLAYER (Fixed at bottom) ---
+        // --- HORIZON MUSIC PLAYER (Fixed at bottom) ---
         HorizonMusicPlayer(
             isPlaying = isPlaying,
             currentTime = currentTime,
@@ -755,5 +789,122 @@ fun TranslationPlayerScreen() {
             onSeek = { fraction -> currentTime = (fraction * duration).toInt().coerceIn(0, duration) },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        // --- Profile Bottom Sheet (on top of everything) ---
+        if (showProfileSheet) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .clickable { showProfileSheet = false },
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.55f)
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(BrandCard)
+                        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .clickable(enabled = false) {}
+                        .padding(horizontal = 20.dp, vertical = 24.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Sheet header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Settings",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            IconButton(onClick = { showProfileSheet = false }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Close",
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // --- Groq API Key Setup ---
+                        Text(
+                            text = "Groq Platform API Key",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = groqApiKey,
+                            onValueChange = { groqApiKey = it },
+                            placeholder = { Text("Enter your Groq API key...", fontSize = 11.sp, color = Color.Gray) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = BrandAccent,
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // --- Voice Engine Selection ---
+                        Text(
+                            text = "Voice Engine",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val voiceEngines = listOf("Default", "Google Wavenet", "Amazon Polly", "ElevenLabs", "Microsoft Azure")
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            voiceEngines.forEach { engine ->
+                                val isEngineSelected = selectedVoiceEngine == engine
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (isEngineSelected) BrandAccent.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.03f))
+                                        .border(
+                                            1.dp,
+                                            if (isEngineSelected) BrandAccent.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.05f),
+                                            RoundedCornerShape(10.dp)
+                                        )
+                                        .clickable { selectedVoiceEngine = engine }
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = engine,
+                                        color = if (isEngineSelected) Color.White else Color.LightGray,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isEngineSelected) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                    if (isEngineSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = BrandAccent,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

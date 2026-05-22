@@ -47,10 +47,10 @@ fun HorizonMusicPlayer(
         25, 45, 15, 60, 75, 40, 30, 50, 85, 60, 45, 70, 95, 55, 30, 50, 75, 90, 65, 40, 55, 80, 50, 35, 40, 60, 30, 45, 20, 35
     )
 
-    // Parse status line into segments separated by ` ••• `
+    // Parse status line into segments separated by ` | `
     val statusSegments = remember(statusLine) {
         if (statusLine.isNotBlank()) {
-            statusLine.split(" ••• ").map { it.trim() }
+            statusLine.split(" | ").map { it.trim() }
         } else {
             emptyList()
         }
@@ -87,7 +87,7 @@ fun HorizonMusicPlayer(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Dynamic status line with ••• separators
+                // Dynamic status line with | separators
                 if (statusSegments.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -97,9 +97,9 @@ fun HorizonMusicPlayer(
                         statusSegments.forEachIndexed { idx, segment ->
                             if (idx > 0) {
                                 Text(
-                                    text = " ••• ",
-                                    color = Color.Gray.copy(alpha = 0.35f),
-                                    fontSize = 10.sp,
+                                    text = " | ",
+                                    color = Color.Gray.copy(alpha = 0.3f),
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -112,31 +112,31 @@ fun HorizonMusicPlayer(
                                     Text(
                                         text = label,
                                         color = Color.Gray,
-                                        fontSize = 10.sp,
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        letterSpacing = 0.5.sp
+                                        letterSpacing = 0.4.sp
                                     )
                                     Text(
                                         text = ":",
                                         color = Color.Gray,
-                                        fontSize = 10.sp,
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = value,
                                         color = Color.White,
-                                        fontSize = 10.sp,
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Black,
-                                        letterSpacing = 0.5.sp
+                                        letterSpacing = 0.4.sp
                                     )
                                 }
                             } else {
                                 Text(
                                     text = segment,
                                     color = Color.White,
-                                    fontSize = 10.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Black,
-                                    letterSpacing = 0.5.sp
+                                    letterSpacing = 0.4.sp
                                 )
                             }
                         }
@@ -145,9 +145,9 @@ fun HorizonMusicPlayer(
                     Text(
                         text = "${currentSpeed}x",
                         color = Color.Gray,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.4.sp
                     )
                 }
             }
