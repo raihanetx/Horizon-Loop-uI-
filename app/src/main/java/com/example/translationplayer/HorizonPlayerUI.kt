@@ -14,12 +14,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -39,10 +41,20 @@ fun HorizonMusicPlayer(
     // --- Local Theme Colors ---
     val BrandCard = Color(0xFF0F131C)
     val BrandAccent = Color(0xFF10B981)
+
     // Waveform Column Sizing Percentages
     val waveformHeights = listOf(
         25, 45, 15, 60, 75, 40, 30, 50, 85, 60, 45, 70, 95, 55, 30, 50, 75, 90, 65, 40, 55, 80, 50, 35, 40, 60, 30, 45, 20, 35
     )
+
+    // Parse status line into segments separated by ` ••• `
+    val statusSegments = remember(statusLine) {
+        if (statusLine.isNotBlank()) {
+            statusLine.split(" ••• ").map { it.trim() }
+        } else {
+            emptyList()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -69,16 +81,75 @@ fun HorizonMusicPlayer(
                 Text(
                     text = "The Middle",
                     color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "No Loop │ Clean │ Speed: ${currentSpeed}x",
-                    color = Color.Gray,
-                    fontSize = 9.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 4.dp)
+                    letterSpacing = 0.3.sp
                 )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Dynamic status line with ••• separators
+                if (statusSegments.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        statusSegments.forEachIndexed { idx, segment ->
+                            if (idx > 0) {
+                                Text(
+                                    text = " ••• ",
+                                    color = Color.Gray.copy(alpha = 0.35f),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            // Split each segment at first ":" to get label + value
+                            val colonIdx = segment.indexOf(':')
+                            if (colonIdx >= 0) {
+                                val label = segment.substring(0, colonIdx)
+                                val value = segment.substring(colonIdx + 1)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = label,
+                                        color = Color.Gray,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    Text(
+                                        text = ":",
+                                        color = Color.Gray,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = value,
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = segment,
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "${currentSpeed}x",
+                        color = Color.Gray,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
+                    )
+                }
             }
 
             // --- ZONE 2: Waveform Progress Section ---
@@ -150,7 +221,7 @@ fun HorizonMusicPlayer(
                 IconButton(
                     onClick = onPlayPause,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(50.dp)
                         .clip(CircleShape)
                         .background(BrandAccent)
                 ) {

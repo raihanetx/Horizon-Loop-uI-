@@ -103,11 +103,11 @@ fun TranslationPlayerScreen() {
         index
     }
 
-    // Status line for the player card: mode:clean | loop:0 | speed:1X
+    // Status line for the player card: mode:clean ••• loop:0 ••• speed:1X
     val statusLine = remember(currentSpeed, activeView, savedLoops.size) {
         val viewName = activeView.name.lowercase()
         val loopCount = savedLoops.size
-        "mode:$viewName | loop:$loopCount | speed:${currentSpeed}X"
+        "mode:$viewName ••• loop:$loopCount ••• speed:${currentSpeed}X"
     }
 
     // Auto Scroll active dialogue line
@@ -313,15 +313,33 @@ fun TranslationPlayerScreen() {
                     ActiveView.DIALOGUE -> {
                         LazyColumn(
                             state = dialogueListState,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             itemsIndexed(dialogueDataset) { idx, item ->
                                 val isSelected = selectedDialogueIndices.contains(idx)
                                 val isCurrentPlaying = (idx == activeDialogueIndex)
 
-                                Row(
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            when {
+                                                isSelected -> BrandAccent.copy(alpha = 0.08f)
+                                                isCurrentPlaying -> Color.White.copy(alpha = 0.03f)
+                                                else -> Color.Transparent
+                                            }
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = when {
+                                                isSelected -> BrandAccent.copy(alpha = 0.35f)
+                                                isCurrentPlaying -> Color.White.copy(alpha = 0.1f)
+                                                else -> Color.White.copy(alpha = 0.04f)
+                                            },
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
                                         .combinedClickable(
                                             onClick = {
                                                 if (selectedDialogueIndices.contains(idx)) {
@@ -331,61 +349,92 @@ fun TranslationPlayerScreen() {
                                                 }
                                             }
                                         )
-                                        .border(
-                                            width = 1.dp,
-                                            color = if (isSelected) BrandAccent.copy(alpha = 0.3f) else Color.Transparent
-                                        )
-                                        .background(if (isSelected) BrandAccent.copy(alpha = 0.02f) else Color.Transparent)
-                                        .padding(vertical = 12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(
-                                        modifier = Modifier.weight(1f),
-                                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            text = String.format("%02d:%02d", item.start / 60, item.start % 60),
-                                            color = Color.LightGray,
-                                            fontSize = 9.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier
-                                                .background(Color.White.copy(alpha = 0.05f))
-                                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                                                .clip(RoundedCornerShape(4.dp))
-                                        )
-                                        Column {
+                                        Row(
+                                            modifier = Modifier.weight(1f),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            // Timestamp badge
                                             Text(
-                                                text = "\"${item.en}\"",
-                                                color = if (isSelected || isCurrentPlaying) Color.White else Color.Gray,
-                                                fontSize = 12.sp,
-                                                fontWeight = if (isSelected || isCurrentPlaying) FontWeight.Bold else FontWeight.Medium
+                                                text = String.format("%02d:%02d", item.start / 60, item.start % 60),
+                                                color = if (isCurrentPlaying) BrandAccent else Color.Gray,
+                                                fontSize = 9.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Black,
+                                                modifier = Modifier
+                                                    .background(
+                                                        if (isCurrentPlaying) BrandAccent.copy(alpha = 0.15f)
+                                                        else Color.White.copy(alpha = 0.06f),
+                                                        RoundedCornerShape(6.dp)
+                                                    )
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
                                             )
-                                            Text(
-                                                text = "\"${item.bn}\"",
-                                                color = if (isSelected || isCurrentPlaying) BrandAccent else Color.Gray,
-                                                fontSize = 10.sp,
-                                                fontWeight = if (isSelected || isCurrentPlaying) FontWeight.Bold else FontWeight.Medium,
-                                                modifier = Modifier.padding(top = 4.dp)
+                                            // Playing indicator dot (only when current)
+                                            if (isCurrentPlaying) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(top = 6.dp)
+                                                        .size(6.dp)
+                                                        .clip(CircleShape)
+                                                        .background(BrandAccent)
+                                                )
+                                            }
+                                            // Dialogue text column
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "\"${item.en}\"",
+                                                    color = when {
+                                                        isSelected || isCurrentPlaying -> Color.White
+                                                        else -> Color(0xFFCCCCCC)
+                                                    },
+                                                    fontSize = 13.sp,
+                                                    fontWeight = if (isSelected || isCurrentPlaying) FontWeight.Bold else FontWeight.Medium,
+                                                    lineHeight = 18.sp
+                                                )
+                                                Text(
+                                                    text = "\"${item.bn}\"",
+                                                    color = when {
+                                                        isSelected || isCurrentPlaying -> BrandAccent.copy(alpha = 0.9f)
+                                                        else -> Color.Gray
+                                                    },
+                                                    fontSize = 11.sp,
+                                                    fontWeight = if (isSelected || isCurrentPlaying) FontWeight.Bold else FontWeight.Normal,
+                                                    modifier = Modifier.padding(top = 4.dp),
+                                                    lineHeight = 16.sp
+                                                )
+                                            }
+                                        }
+                                        // Selection check circle
+                                        Box(
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (isSelected) BrandAccent
+                                                    else Color.White.copy(alpha = 0.06f)
+                                                )
+                                                .border(
+                                                    1.5.dp,
+                                                    if (isSelected) BrandAccent else Color.White.copy(alpha = 0.15f),
+                                                    CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isSelected) Icons.Default.Check else Icons.Default.Add,
+                                                contentDescription = "Select",
+                                                tint = if (isSelected) Color(0xFF0F131C) else Color.Gray,
+                                                modifier = Modifier.size(16.dp)
                                             )
                                         }
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isSelected) BrandAccent.copy(alpha = 0.15f) else Color.Transparent)
-                                            .border(1.dp, if (isSelected) BrandAccent else Color.Gray, CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isSelected) Icons.Default.RepeatOne else Icons.Default.PlayArrow,
-                                            contentDescription = "Indicator",
-                                            tint = if (isSelected) BrandAccent else Color.Gray,
-                                            modifier = Modifier.size(14.dp)
-                                        )
                                     }
                                 }
                             }
