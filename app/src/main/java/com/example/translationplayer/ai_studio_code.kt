@@ -34,12 +34,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
-// --- COLOR THEME DEFINITIONS ---
-val BrandBg = Color(0xFF080B11)
-val BrandCard = Color(0xFF0F131C)
-val BrandAccent = Color(0xFF10B981)
-val BrandAccentDark = Color(0xFF059669)
-val DividerColor = Color(0xFF1F2937)
+// --- GRAY + WHITE COLOR THEME ---
+val BrandBg = Color(0xFF121212)
+val BrandCard = Color(0xFF1A1A1A)
+val BrandAccent = Color(0xFFE0E0E0) // Light gray accent
+val DividerColor = Color(0xFF333333)
 
 // --- DATA STRUCTURES ---
 data class DialogueLine(val start: Int, val en: String, val bn: String)
@@ -107,7 +106,7 @@ fun TranslationPlayerScreen() {
     // Status line for the player card: Mode | Loop: Yes/No | Speed
     val statusLine = remember(currentSpeed, activeView, savedLoops.size) {
         val viewName = activeView.name.lowercase().replaceFirstChar { it.uppercase() }
-        val loopStatus = if (savedLoops.isNotEmpty()) "Yes" else "No"
+        val loopStatus = if (activeView == ActiveView.LOOP) "Yes" else "No"
         "$viewName | Loop: $loopStatus | ${currentSpeed}x"
     }
 
@@ -551,7 +550,7 @@ fun TranslationPlayerScreen() {
                                                 currentTime = loopStartInput.toIntOrNull() ?: 0
                                                 isPlaying = true
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A2A2A)),
                                             modifier = Modifier.weight(1f)
                                         ) {
                                             Icon(Icons.Default.PlayArrow, contentDescription = "Try")
@@ -574,7 +573,10 @@ fun TranslationPlayerScreen() {
                                                     isLoopFormOpen = false
                                                 }
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = BrandAccent),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = BrandAccent,
+                                                contentColor = Color(0xFF1A1A1A)
+                                            ),
                                             modifier = Modifier.weight(1f)
                                         ) {
                                             Text("Save Loop", fontSize = 10.sp)
@@ -675,7 +677,10 @@ fun TranslationPlayerScreen() {
                                                 isNoteFormOpen = false
                                             }
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = BrandAccent),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = BrandAccent,
+                                            contentColor = Color(0xFF1A1A1A)
+                                        ),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text("Add Note to Notebook", fontSize = 12.sp, fontWeight = FontWeight.Bold)

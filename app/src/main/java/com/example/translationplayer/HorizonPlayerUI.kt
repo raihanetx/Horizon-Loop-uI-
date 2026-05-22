@@ -44,14 +44,22 @@ fun MiniWaveform(
     progressFraction: Float,
     modifier: Modifier = Modifier
 ) {
+    val barCount = 30
     val barHeights = remember {
-        listOf(
-            0.20f, 0.35f, 0.55f, 0.75f, 0.90f, 1.00f, 0.85f, 0.65f, 0.50f, 0.30f,
-            0.25f, 0.40f, 0.60f, 0.80f, 0.95f, 1.00f, 0.90f, 0.70f, 0.55f, 0.35f,
-            0.20f, 0.30f, 0.50f, 0.70f, 0.85f, 1.00f, 0.95f, 0.75f, 0.55f, 0.35f
-        )
+        mutableStateListOf<Float>().apply {
+            repeat(barCount) { add(0.3f + (0..70).random() / 100f) }
+        }
     }
-    val barCount = barHeights.size
+
+    // Animate bars every 100ms — creates a live frequency analyzer effect
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(100)
+            for (i in barHeights.indices) {
+                barHeights[i] = 0.3f + (0..70).random() / 100f
+            }
+        }
+    }
 
     Row(
         modifier = modifier
