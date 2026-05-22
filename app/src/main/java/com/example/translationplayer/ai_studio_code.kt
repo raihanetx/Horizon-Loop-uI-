@@ -576,17 +576,18 @@ fun TranslationPlayerScreen(
                     Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
 
                     // Loop
-                    IconButton(
-                        onClick = { activeView = ActiveView.LOOP },
+                    Box(
                         modifier = Modifier
                             .size(30.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.LOOP },
                                 onLongClick = {
                                     activeView = ActiveView.LOOP
                                     isLoopFormOpen = !isLoopFormOpen
                                 }
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Repeat,
@@ -599,17 +600,18 @@ fun TranslationPlayerScreen(
                     Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
 
                     // Notes
-                    IconButton(
-                        onClick = { activeView = ActiveView.NOTES },
+                    Box(
                         modifier = Modifier
                             .size(30.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.NOTES },
                                 onLongClick = {
                                     activeView = ActiveView.NOTES
                                     isNoteFormOpen = !isNoteFormOpen
                                 }
-                            )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.EditNote,
@@ -723,7 +725,7 @@ fun TranslationPlayerScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
