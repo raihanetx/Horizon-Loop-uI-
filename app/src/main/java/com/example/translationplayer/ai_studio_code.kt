@@ -103,11 +103,11 @@ fun TranslationPlayerScreen() {
         index
     }
 
-    // Status line for the player card: Mode | Loop: Yes/No | Speed
+    // Status line for the player card: mode:clean | loop:0 | speed:1X
     val statusLine = remember(currentSpeed, activeView, savedLoops.size) {
-        val viewName = activeView.name.lowercase().replaceFirstChar { it.uppercase() }
-        val loopStatus = if (activeView == ActiveView.LOOP) "Yes" else "No"
-        "$viewName | Loop: $loopStatus | ${currentSpeed}x"
+        val viewName = activeView.name.lowercase()
+        val loopCount = savedLoops.size
+        "mode:$viewName | loop:$loopCount | speed:${currentSpeed}X"
     }
 
     // Auto Scroll active dialogue line

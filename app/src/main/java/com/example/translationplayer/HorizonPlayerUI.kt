@@ -1,10 +1,13 @@
 package com.example.translationplayer
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
@@ -36,53 +39,87 @@ val PlayPauseBg = Color(0xFFE0E0E0)
 val PlayPauseIcon = Color(0xFF1A1A1A)
 
 // ============================================================
-//  AUDIO VISUALIZATION — Mini Waveform
-//  30 bars that color based on playback progress
+//  AUDIO VISUALIZATION — Smooth Waveform Line
+//  A continuous curvy waveform drawn on Canvas that undulates
+//  to feel alive during playback.
 // ============================================================
 @Composable
-fun MiniWaveform(
+fun WaveformLine(
     progressFraction: Float,
     modifier: Modifier = Modifier
 ) {
-    val barCount = 30
-    val barHeights = remember {
+    val pointCount = 36
+    val yOffsets = remember {
         mutableStateListOf<Float>().apply {
-            repeat(barCount) { add(0.3f + (0..70).random() / 100f) }
+            repeat(pointCount) { add((0..40).random() / 100f) }
         }
     }
 
-    // Animate bars every 100ms — creates a live frequency analyzer effect
+    // Animate the waveform curve every 120ms for a live feel
     LaunchedEffect(Unit) {
         while (true) {
-            kotlinx.coroutines.delay(100)
-            for (i in barHeights.indices) {
-                barHeights[i] = 0.3f + (0..70).random() / 100f
+            kotlinx.coroutines.delay(120)
+            for (i in yOffsets.indices) {
+                yOffsets[i] = (yOffsets[i] + ((0..30).random() - 15) / 200f)
+                    .coerceIn(0.1f, 0.9f)
             }
         }
     }
 
-    Row(
+    Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(38.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Bottom
+            .height(40.dp)
     ) {
-        barHeights.forEachIndexed { index, height ->
-            val barPosition = index.toFloat() / barCount
-            val isPlayed = barPosition <= progressFraction
+        val w = size.width
+        val h = size.height
+        val stepX = w / (pointCount - 1).toFloat()
+        val midY = h / 2f
+        val amp = h * 0.4f
 
-            Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height((height * 36).dp.coerceAtLeast(2.dp))
-                    .clip(RoundedCornerShape(1.5.dp))
-                    .background(
-                        if (isPlayed) ProgressFilled
-                        else ProgressTrack
-                    )
-            )
+        // Build all waveform points
+        val pts = List(pointCount) { i ->
+            Offset(i * stepX, midY + (yOffsets[i] - 0.5f) * amp)
         }
+
+        val splitIdx = (progressFraction * pointCount).toInt().coerceIn(1, pointCount - 1)
+
+        // ── Played portion (light gray fill) ──
+        if (progressFraction > 0f) {
+            val p = Path()
+            p.moveTo(pts[0].x, midY)
+            p.lineTo(pts[0].x, pts[0].y)
+            for (i in 0 until splitIdx) {
+                val cx = (pts[i].x + pts[i + 1].x) / 2f
+                p.cubicTo(cx, pts[i].y, cx, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y)
+            }
+            p.lineTo(pts[splitIdx].x, midY)
+            p.close()
+            drawPath(p, color = ProgressFilled)
+        }
+
+        // ── Unplayed portion (dark gray fill) ──
+        if (progressFraction < 1f && splitIdx < pointCount - 1) {
+            val p = Path()
+            p.moveTo(pts[splitIdx].x, midY)
+            p.lineTo(pts[splitIdx].x, pts[splitIdx].y)
+            for (i in splitIdx until pointCount - 1) {
+                val cx = (pts[i].x + pts[i + 1].x) / 2f
+                p.cubicTo(cx, pts[i].y, cx, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y)
+            }
+            p.lineTo(pts.last().x, midY)
+            p.close()
+            drawPath(p, color = ProgressTrack)
+        }
+
+        // ── Playhead line ──
+        val px = progressFraction * w
+        drawLine(
+            color = Color.White.copy(alpha = 0.18f),
+            start = Offset(px, 0f),
+            end = Offset(px, h),
+            strokeWidth = 1.dp.toPx()
+        )
     }
 }
 
@@ -178,7 +215,7 @@ fun HorizonMusicPlayer(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                MiniWaveform(
+                WaveformLine(
                     progressFraction = progressFraction,
                     modifier = Modifier.fillMaxWidth()
                 )
