@@ -1,155 +1,33 @@
 package com.example.translationplayer
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// --- GRAY + WHITE COLOR SCHEME ---
-val CardSurface = Color(0xFF1A1A1A)
-val CardBorder = Color(0xFF2A2A2A)
-val TextPrimary = Color(0xFFF5F5F5)
-val TextSecondary = Color(0xFFB0B0B0)
-val TextTertiary = Color(0xFF909090)
-val ProgressTrack = Color(0xFF333333)
-val ProgressFilled = Color(0xFFE0E0E0)
-val ControlButtonBg = Color(0xFF2A2A2A)
-val PlayPauseBg = Color(0xFFE0E0E0)
-val PlayPauseIcon = Color(0xFF1A1A1A)
-
-// ============================================================
-//  AUDIO VISUALIZATION — Smooth Waveform Line
-//  A continuous curvy waveform drawn on Canvas that undulates
-//  to feel alive during playback. Supports tap-to-seek.
-// ============================================================
-@Composable
-fun WaveformLine(
-    progressFraction: Float,
-    isPlaying: Boolean = true,
-    onSeek: (Float) -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    val pointCount = 36
-    val yOffsets = remember {
-        mutableStateListOf<Float>().apply {
-            repeat(pointCount) { add((0..40).random() / 100f) }
-        }
-    }
-
-    // Animate the waveform curve every 120ms — only undulates when playing
-    LaunchedEffect(isPlaying) {
-        if (isPlaying) {
-            while (true) {
-                kotlinx.coroutines.delay(120)
-                for (i in yOffsets.indices) {
-                    yOffsets[i] = (yOffsets[i] + ((0..30).random() - 15) / 200f)
-                        .coerceIn(0.1f, 0.9f)
-                }
-            }
-        }
-    }
-
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .pointerInput(Unit) {
-                detectTapGestures { offset ->
-                    val fraction = (offset.x / size.width).coerceIn(0f, 1f)
-                    onSeek(fraction)
-                }
-            }
-    ) {
-        val w = size.width
-        val h = size.height
-        val stepX = w / (pointCount - 1).toFloat()
-        val midY = h / 2f
-        val amp = h * 0.4f
-
-        // Build all waveform points
-        val pts = List(pointCount) { i ->
-            Offset(i * stepX, midY + (yOffsets[i] - 0.5f) * amp)
-        }
-
-        val splitIdx = (progressFraction * pointCount).toInt().coerceIn(0, pointCount - 1)
-
-        // ── Played portion (light gray fill) ──
-        if (progressFraction > 0f && splitIdx > 0) {
-            val p = Path()
-            p.moveTo(pts[0].x, midY)
-            p.lineTo(pts[0].x, pts[0].y)
-            for (i in 0 until splitIdx) {
-                val cx = (pts[i].x + pts[i + 1].x) / 2f
-                p.cubicTo(cx, pts[i].y, cx, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y)
-            }
-            p.lineTo(pts[splitIdx].x, midY)
-            p.close()
-            drawPath(p, color = ProgressFilled)
-        }
-
-        // ── Unplayed portion (dark gray fill) ──
-        if (progressFraction < 1f && splitIdx < pointCount - 1) {
-            val startIdx = if (splitIdx == 0) 0 else splitIdx
-            val p = Path()
-            p.moveTo(pts[startIdx].x, midY)
-            p.lineTo(pts[startIdx].x, pts[startIdx].y)
-            for (i in startIdx until pointCount - 1) {
-                val cx = (pts[i].x + pts[i + 1].x) / 2f
-                p.cubicTo(cx, pts[i].y, cx, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y)
-            }
-            p.lineTo(pts.last().x, midY)
-            p.close()
-            drawPath(p, color = ProgressTrack)
-        }
-
-        // ── Playhead line ──
-        val px = progressFraction * w
-        drawLine(
-            color = Color.White.copy(alpha = 0.18f),
-            start = Offset(px, 0f),
-            end = Offset(px, h),
-            strokeWidth = 1.dp.toPx()
-        )
-    }
-}
-
-// ============================================================
-//  MINIMAL MUSIC PLAYER CARD — Gray + White Theme
-//  Layout:
-//   1. Song Title
-//   2. Status line: loop:X | quote | speed:Yx
-//   3. Audio Visualization (Waveform)
-//   4. Time labels
-//   5. Backward ◀️  Play/Pause ▶️  Forward only
-// ============================================================
 @Composable
 fun HorizonMusicPlayer(
-    isPlaying: Boolean,
     currentTime: Int,
     duration: Int,
+    isPlaying: Boolean,
     currentSpeed: Float,
     statusLine: String = "",
     onPlayPause: () -> Unit,
@@ -158,226 +36,143 @@ fun HorizonMusicPlayer(
     onSeek: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val progressFraction = if (duration > 0) currentTime.toFloat() / duration else 0f
+    // --- Local Theme Colors ---
+    val BrandCard = Color(0xFF0F131C)
+    val BrandAccent = Color(0xFF10B981)
+    // Waveform Column Sizing Percentages
+    val waveformHeights = listOf(
+        25, 45, 15, 60, 75, 40, 30, 50, 85, 60, 45, 70, 95, 55, 30, 50, 75, 90, 65, 40, 55, 80, 50, 35, 40, 60, 30, 45, 20, 35
+    )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .height(190.dp)
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(CardSurface)
+            .background(BrandCard)
             .border(
-                width = 0.5.dp,
-                color = CardBorder,
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             )
+            .padding(vertical = 16.dp, horizontal = 20.dp)
     ) {
-        // Subtle top border glow
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.White.copy(alpha = 0.08f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .align(Alignment.TopCenter)
-        )
-
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // ───────────── 1. SONG TITLE ─────────────
-            Text(
-                text = "The Middle",
-                color = TextPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                letterSpacing = 0.5.sp
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // ───────────── 2. STATUS LINE — Styled Pills ─────────────
-            if (statusLine.isBlank()) {
-                Text(
-                    text = "${currentSpeed}x",
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                val statusParts = remember(statusLine) {
-                    statusLine.split(" | ").map { it.trim() }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    statusParts.forEachIndexed { idx, part ->
-                        if (idx > 0) {
-                            Text(
-                                text = "•",
-                                color = TextTertiary.copy(alpha = 0.4f),
-                                fontSize = 8.sp,
-                                modifier = Modifier.padding(horizontal = 6.dp)
-                            )
-                        }
-                        // Split each part into label and value (e.g. "mode:clean" → "mode" + ":clean")
-                        val colonIdx = part.indexOf(':')
-                        val (label, value) = if (colonIdx >= 0) {
-                            part.substring(0, colonIdx) to part.substring(colonIdx)
-                        } else {
-                            "" to part
-                        }
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (label.isNotEmpty()) Color.White.copy(alpha = 0.04f) else Color.Transparent)
-                                .padding(horizontal = if (label.isNotEmpty()) 8.dp else 0.dp, vertical = if (label.isNotEmpty()) 3.dp else 0.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (label.isNotEmpty()) {
-                                Text(
-                                    text = label,
-                                    color = TextTertiary,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Text(
-                                text = value,
-                                color = TextPrimary,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ───────────── 3. AUDIO VISUALIZATION ─────────────
+            // --- ZONE 1: Subtitle & Information Section ---
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                WaveformLine(
-                    progressFraction = progressFraction,
-                    isPlaying = isPlaying,
-                    onSeek = onSeek,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "The Middle",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
-
-                // Time labels below waveform
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = String.format("%d:%02d", currentTime / 60, currentTime % 60),
-                        color = TextTertiary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = String.format("%d:%02d", duration / 60, duration % 60),
-                        color = TextTertiary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Text(
+                    text = "No Loop │ Clean │ Speed: ${currentSpeed}x",
+                    color = Color.Gray,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // --- ZONE 2: Waveform Progress Section ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                // Elapsed Time text
+                Text(
+                    text = String.format("%d:%02d", currentTime / 60, currentTime % 60),
+                    color = Color.Gray,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+                // Waveform Graph columns row
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    waveformHeights.forEachIndexed { i, height ->
+                        val isCompleted = (i <= (currentTime * waveformHeights.size / duration))
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(height / 100f)
+                                .padding(horizontal = 1.dp)
+                                .clip(RoundedCornerShape(99.dp))
+                                .background(if (isCompleted) BrandAccent else Color.DarkGray)
+                        )
+                    }
+                }
+                // Total duration text
+                Text(
+                    text = String.format("%d:%02d", duration / 60, duration % 60),
+                    color = Color.Gray,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
 
-            // ───────────── 4. CONTROLS ─────────────
+            // --- ZONE 3: Media Control Buttons ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Backward
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(ControlButtonBg)
-                        .border(0.5.dp, CardBorder, CircleShape),
-                    contentAlignment = Alignment.Center
+                // Rewind Button (-5 sec)
+                IconButton(
+                    onClick = onRewind,
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    IconButton(
-                        onClick = { onRewind() },
-                        modifier = Modifier.size(44.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FastRewind,
-                            contentDescription = "Rewind 5s",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.FastRewind,
+                        contentDescription = "Rewind",
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
-
-                Spacer(modifier = Modifier.width(28.dp))
-
-                // Play/Pause
-                Box(
+                Spacer(modifier = Modifier.width(20.dp))
+                // Circular Play/Pause Button
+                IconButton(
+                    onClick = onPlayPause,
                     modifier = Modifier
-                        .size(60.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
-                        .background(PlayPauseBg),
-                    contentAlignment = Alignment.Center
+                        .background(BrandAccent)
                 ) {
-                    IconButton(
-                        onClick = { onPlayPause() },
-                        modifier = Modifier.size(60.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = PlayPauseIcon,
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "PlayPause",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
-
-                Spacer(modifier = Modifier.width(28.dp))
-
-                // Forward
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(ControlButtonBg)
-                        .border(0.5.dp, CardBorder, CircleShape),
-                    contentAlignment = Alignment.Center
+                Spacer(modifier = Modifier.width(20.dp))
+                // Forward Button (+5 sec)
+                IconButton(
+                    onClick = onForward,
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    IconButton(
-                        onClick = { onForward() },
-                        modifier = Modifier.size(44.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FastForward,
-                            contentDescription = "Forward 5s",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.FastForward,
+                        contentDescription = "Forward",
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
