@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -35,22 +34,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
-// --- GRAY + WHITE COLOR THEME ---
+// ============================================================
+//  GRAY + WHITE COLOR THEME
+// ============================================================
 val BrandBg = Color(0xFF121212)
 val BrandCard = Color(0xFF1A1A1A)
-val BrandAccent = Color(0xFFE0E0E0) // Light gray accent
+val BrandAccent = Color(0xFFCCCCCC)  // Light gray accent
 val DividerColor = Color(0xFF333333)
+val TextSecondary = Color(0xFF999999)
 
-// --- DATA STRUCTURES ---
+// ============================================================
+//  DATA STRUCTURES
+// ============================================================
 data class DialogueLine(val start: Int, val en: String, val bn: String)
 data class SavedLoop(val name: String, val start: Int, val end: Int, val repeats: Int)
 data class SavedNote(val time: Int, val text: String)
+data class SongItem(val title: String, val artist: String, val duration: Int)
 
 enum class ActiveView {
     CLEAN, DIALOGUE, LOOP, NOTES
 }
 
-// Mock Dataset
+enum class Screen { HOME, PLAYER, PROFILE }
+
+// ============================================================
+//  MOCK DATASET
+// ============================================================
 val dialogueDataset = listOf(
     DialogueLine(0, "Take a step into my cabin", "আমার ঘরে একটি পদক্ষেপ নাও"),
     DialogueLine(6, "Take a deep breath, ease your mind", "দীর্ঘ শ্বাস নাও, মনকে শান্ত করো"),
@@ -59,10 +68,360 @@ val dialogueDataset = listOf(
     DialogueLine(24, "So baby, pull me closer", "তাই প্রিয়, আমাকে তোমার আরও কাছে টেনে নাও")
 )
 
+val musicLibrary = listOf(
+    SongItem("The Middle", "Maren Morris", 30),
+    SongItem("Blinding Lights", "The Weeknd", 45),
+    SongItem("Shape of You", "Ed Sheeran", 38),
+    SongItem("Bohemian Rhapsody", "Queen", 55),
+    SongItem("Hotel California", "Eagles", 42),
+    SongItem("Imagine", "John Lennon", 35)
+)
 
+// ============================================================
+//  PARENT — SCREEN NAVIGATION
+// ============================================================
+@Composable
+fun HorizonApp() {
+    var currentScreen by remember { mutableStateOf(Screen.HOME) }
+    var previousScreen by remember { mutableStateOf(Screen.HOME) }
+    var activeSongTitle by remember { mutableStateOf("The Middle") }
+
+    when (currentScreen) {
+        Screen.HOME -> HomeScreen(
+            onSongClick = { song ->
+                activeSongTitle = song.title
+                currentScreen = Screen.PLAYER
+            },
+            onProfileClick = {
+                previousScreen = Screen.HOME
+                currentScreen = Screen.PROFILE
+            }
+        )
+        Screen.PLAYER -> TranslationPlayerScreen(
+            songTitle = activeSongTitle,
+            onHomeClick = { currentScreen = Screen.HOME },
+            onProfileClick = {
+                previousScreen = Screen.PLAYER
+                currentScreen = Screen.PROFILE
+            }
+        )
+        Screen.PROFILE -> ProfileScreen(
+            onBack = { currentScreen = previousScreen }
+        )
+    }
+}
+
+// ============================================================
+//  HOME SCREEN — Music Library
+// ============================================================
+@Composable
+fun HomeScreen(
+    onSongClick: (SongItem) -> Unit,
+    onProfileClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BrandBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // --- HOME HEADER (single consolidated bar) ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left: App title
+                Text(
+                    text = "Horizon",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                // Right: Profile icon
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape)
+                        .clickable { onProfileClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile",
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            // --- MUSIC LIST ---
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Your Library",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
+                    )
+                }
+                itemsIndexed(musicLibrary) { idx, song ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(BrandCard)
+                            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                            .clickable { onSongClick(song) }
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            // Cover art placeholder
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.White.copy(alpha = 0.08f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MusicNote,
+                                    contentDescription = null,
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            // Song info
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = song.title,
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = song.artist,
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                            // Duration
+                            Text(
+                                text = String.format("%d:%02d", song.duration / 60, song.duration % 60),
+                                color = TextSecondary,
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            )
+                            // Play icon
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Play",
+                                tint = BrandAccent,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+//  PROFILE SCREEN — Full Page
+// ============================================================
+@Composable
+fun ProfileScreen(
+    onBack: () -> Unit
+) {
+    var groqApiKey by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BrandBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // --- HEADER ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .clickable { onBack() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Text(
+                    text = "Settings",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // --- SETTINGS CONTENT ---
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Profile info card
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(BrandCard)
+                        .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = BrandAccent,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Alex Mercer",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Student",
+                            color = TextSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                // Groq API Key
+                Column {
+                    Text(
+                        text = "Groq Platform API Key",
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = groqApiKey,
+                        onValueChange = { groqApiKey = it },
+                        placeholder = { Text("Enter your Groq API key...", fontSize = 12.sp, color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BrandAccent,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = BrandAccent
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+
+                // Voice Engine — only Whisper Large v3
+                Column {
+                    Text(
+                        text = "Voice Engine",
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .border(1.dp, BrandAccent.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Whisper Large v3",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "OpenAI Whisper — highest accuracy",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = BrandAccent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+//  PLAYER SCREEN — Translation Player
+// ============================================================
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TranslationPlayerScreen() {
+fun TranslationPlayerScreen(
+    songTitle: String = "The Middle",
+    onHomeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
+) {
     // --- STATE MANAGEMENT ---
     var activeView by remember { mutableStateOf(ActiveView.CLEAN) }
     var isPlaying by remember { mutableStateOf(false) }
@@ -75,9 +434,6 @@ fun TranslationPlayerScreen() {
     // Form Toggle States
     var isLoopFormOpen by remember { mutableStateOf(false) }
     var isNoteFormOpen by remember { mutableStateOf(false) }
-    var showProfileSheet by remember { mutableStateOf(false) }
-    var groqApiKey by remember { mutableStateOf("") }
-    var selectedVoiceEngine by remember { mutableStateOf("Default") }
 
     // Selection States
     val selectedDialogueIndices = remember { mutableStateListOf<Int>() }
@@ -90,7 +446,7 @@ fun TranslationPlayerScreen() {
     var loopNameInput by remember { mutableStateOf("") }
     var loopStartInput by remember { mutableStateOf("0") }
     var loopEndInput by remember { mutableStateOf("0") }
-    var loopRepeatsSelection by remember { mutableStateOf(1) } // 1x, 3x, 5x, 999 (Infinite)
+    var loopRepeatsSelection by remember { mutableStateOf(1) }
     var noteTextInput by remember { mutableStateOf("") }
 
     val coroutineScope = rememberCoroutineScope()
@@ -138,138 +494,92 @@ fun TranslationPlayerScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 200.dp) // Leave space for the minimal player card
+                .padding(bottom = 200.dp) // Leave space for the player card
         ) {
-            // --- TOP HEADER ACTION ROW ---
+            // ================================================================
+            //  CONSOLIDATED HEADER — All icons in ONE unified bar
+            // ================================================================
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left profile details group
+                // Left: Back + Profile Name
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    IconButton(
-                        onClick = { /* Back Action */ },
-                        modifier = Modifier.size(28.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.06f))
+                            .clickable { onHomeClick() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
+                            contentDescription = "Home",
+                            tint = Color.LightGray,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.1f))
-                            .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        IconButton(
-                            onClick = { showProfileSheet = !showProfileSheet },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = Color.LightGray,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = "Alex Mercer",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            text = "Student",
-                            color = Color.Gray,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                // Send Translation Button
-                IconButton(
-                    onClick = { /* Navigation to translation screen */ },
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(BrandAccent.copy(alpha = 0.15f))
-                        .border(1.dp, BrandAccent.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Send to Translation",
-                        tint = BrandAccent,
-                        modifier = Modifier.size(16.dp)
+                    Text(
+                        text = "Alex Mercer",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Consolidated Right Control Hub
+                // Right: All icons in ONE consolidated bar
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Black.copy(alpha = 0.3f))
-                        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .background(Color.Black.copy(alpha = 0.35f))
+                        .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Speed Selector
+                    // Speed
                     Text(
                         text = "${currentSpeed}x",
-                        color = Color.LightGray,
+                        color = BrandAccent,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .combinedClickable(
-                                onClick = { speedIndex = (speedIndex + 1) % speeds.size }
-                            )
-                            .padding(8.dp)
+                            .clickable { speedIndex = (speedIndex + 1) % speeds.size }
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
                     )
 
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.width(1.dp).height(12.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
 
-                    // Mode Toggle (Clean vs Dialogue)
+                    // Mode Toggle
                     IconButton(
                         onClick = {
                             activeView = if (activeView == ActiveView.CLEAN) ActiveView.DIALOGUE else ActiveView.CLEAN
                         },
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(30.dp)
                     ) {
                         Icon(
                             imageVector = if (activeView == ActiveView.DIALOGUE) Icons.Default.Subtitles else Icons.Default.Visibility,
                             contentDescription = "Toggle Mode",
-                            tint = if (activeView == ActiveView.DIALOGUE || activeView == ActiveView.CLEAN) BrandAccent else Color.LightGray,
-                            modifier = Modifier.size(18.dp)
+                            tint = if (activeView == ActiveView.DIALOGUE || activeView == ActiveView.CLEAN) BrandAccent else Color.Gray,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.width(1.dp).height(12.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
 
-                    // Loop view controller (Long press for Add interface)
+                    // Loop
                     IconButton(
                         onClick = { activeView = ActiveView.LOOP },
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(30.dp)
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.LOOP },
                                 onLongClick = {
@@ -280,21 +590,19 @@ fun TranslationPlayerScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.Default.Repeat,
-                            contentDescription = "Loop view",
-                            tint = if (activeView == ActiveView.LOOP) BrandAccent else Color.LightGray,
-                            modifier = Modifier.size(18.dp)
+                            contentDescription = "Loop",
+                            tint = if (activeView == ActiveView.LOOP) BrandAccent else Color.Gray,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.width(1.dp).height(12.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
 
-                    // Notes view controller (Long press for Add interface)
+                    // Notes
                     IconButton(
                         onClick = { activeView = ActiveView.NOTES },
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(30.dp)
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.NOTES },
                                 onLongClick = {
@@ -305,9 +613,37 @@ fun TranslationPlayerScreen() {
                     ) {
                         Icon(
                             imageVector = Icons.Default.EditNote,
-                            contentDescription = "Notes Mode",
-                            tint = if (activeView == ActiveView.NOTES) BrandAccent else Color.LightGray,
-                            modifier = Modifier.size(18.dp)
+                            contentDescription = "Notes",
+                            tint = if (activeView == ActiveView.NOTES) BrandAccent else Color.Gray,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
+
+                    // Send to Translation
+                    IconButton(
+                        onClick = { /* Navigate to translation */ },
+                        modifier = Modifier.size(30.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = BrandAccent,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // Profile
+                    IconButton(
+                        onClick = { onProfileClick() },
+                        modifier = Modifier.size(30.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.LightGray,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -465,7 +801,7 @@ fun TranslationPlayerScreen() {
                                             Icon(
                                                 imageVector = if (isSelected) Icons.Default.Check else Icons.Default.Add,
                                                 contentDescription = "Select",
-                                                tint = if (isSelected) Color(0xFF0F131C) else Color.Gray,
+                                                tint = if (isSelected) Color(0xFF121212) else Color.Gray,
                                                 modifier = Modifier.size(16.dp)
                                             )
                                         }
@@ -479,7 +815,7 @@ fun TranslationPlayerScreen() {
                             // Saved Loop Title Label
                             Text(
                                 text = "Saved Loops",
-                                color = Color.Gray,
+                                color = TextSecondary,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 modifier = Modifier.padding(bottom = 8.dp)
@@ -553,7 +889,7 @@ fun TranslationPlayerScreen() {
                                 }
                             }
 
-                            // Loop Adding Interface Form (Stationary at Bottom of view)
+                            // Loop Adding Interface Form
                             AnimatedVisibility(
                                 visible = isLoopFormOpen,
                                 enter = slideInVertically { it } + fadeIn(),
@@ -673,13 +1009,13 @@ fun TranslationPlayerScreen() {
                         Column(modifier = Modifier.fillMaxSize()) {
                             Text(
                                 text = "Saved Notes",
-                                color = Color.Gray,
+                                color = TextSecondary,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
-                            // Saved Notes list Vertical Layout
+                            // Saved Notes list
                             LazyColumn(modifier = Modifier.weight(1f)) {
                                 itemsIndexed(savedNotes) { index, note ->
                                     Row(
@@ -717,7 +1053,7 @@ fun TranslationPlayerScreen() {
                                 }
                             }
 
-                            // Note Adding Interface Form (Stationary at Bottom of view)
+                            // Note Adding Interface Form
                             AnimatedVisibility(
                                 visible = isNoteFormOpen,
                                 enter = slideInVertically { it } + fadeIn(),
@@ -733,7 +1069,7 @@ fun TranslationPlayerScreen() {
                                 ) {
                                     Text(
                                         text = "Study Notebook",
-                                        color = Color.Gray,
+                                        color = TextSecondary,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -778,6 +1114,7 @@ fun TranslationPlayerScreen() {
 
         // --- HORIZON MUSIC PLAYER (Fixed at bottom) ---
         HorizonMusicPlayer(
+            songTitle = songTitle,
             isPlaying = isPlaying,
             currentTime = currentTime,
             duration = duration,
@@ -789,122 +1126,5 @@ fun TranslationPlayerScreen() {
             onSeek = { fraction -> currentTime = (fraction * duration).toInt().coerceIn(0, duration) },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-
-        // --- Profile Bottom Sheet (on top of everything) ---
-        if (showProfileSheet) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .clickable { showProfileSheet = false },
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.55f)
-                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(BrandCard)
-                        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .clickable(enabled = false) {}
-                        .padding(horizontal = 20.dp, vertical = 24.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        // Sheet header
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Settings",
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            IconButton(onClick = { showProfileSheet = false }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Close",
-                                    tint = Color.Gray
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // --- Groq API Key Setup ---
-                        Text(
-                            text = "Groq Platform API Key",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = groqApiKey,
-                            onValueChange = { groqApiKey = it },
-                            placeholder = { Text("Enter your Groq API key...", fontSize = 11.sp, color = Color.Gray) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = BrandAccent,
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // --- Voice Engine Selection ---
-                        Text(
-                            text = "Voice Engine",
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        val voiceEngines = listOf("Default", "Google Wavenet", "Amazon Polly", "ElevenLabs", "Microsoft Azure")
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            voiceEngines.forEach { engine ->
-                                val isEngineSelected = selectedVoiceEngine == engine
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(if (isEngineSelected) BrandAccent.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.03f))
-                                        .border(
-                                            1.dp,
-                                            if (isEngineSelected) BrandAccent.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.05f),
-                                            RoundedCornerShape(10.dp)
-                                        )
-                                        .clickable { selectedVoiceEngine = engine }
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = engine,
-                                        color = if (isEngineSelected) Color.White else Color.LightGray,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isEngineSelected) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                    if (isEngineSelected) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Selected",
-                                            tint = BrandAccent,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 }

@@ -21,12 +21,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Gray/White accent colors for the player card
+private val PlayerCardBg = Color(0xFF1A1A1A)
+private val PlayerAccent = Color(0xFFCCCCCC)
+private val PlayerWaveActive = Color(0xFFBBBBBB)
+private val PlayerWaveInactive = Color(0xFF444444)
+
 @Composable
 fun HorizonMusicPlayer(
+    songTitle: String = "The Middle",
     currentTime: Int,
     duration: Int,
     isPlaying: Boolean,
@@ -38,10 +44,6 @@ fun HorizonMusicPlayer(
     onSeek: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // --- Local Theme Colors ---
-    val BrandCard = Color(0xFF0F131C)
-    val BrandAccent = Color(0xFF10B981)
-
     // Waveform Column Sizing Percentages
     val waveformHeights = listOf(
         25, 45, 15, 60, 75, 40, 30, 50, 85, 60, 45, 70, 95, 55, 30, 50, 75, 90, 65, 40, 55, 80, 50, 35, 40, 60, 30, 45, 20, 35
@@ -61,10 +63,10 @@ fun HorizonMusicPlayer(
             .fillMaxWidth()
             .height(190.dp)
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(BrandCard)
+            .background(PlayerCardBg)
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.05f),
+                color = Color.White.copy(alpha = 0.08f),
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             )
             .padding(vertical = 16.dp, horizontal = 20.dp)
@@ -73,13 +75,13 @@ fun HorizonMusicPlayer(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // --- ZONE 1: Subtitle & Information Section ---
+            // --- ZONE 1: Title & Status Section ---
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "The Middle",
+                    text = songTitle,
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -103,7 +105,6 @@ fun HorizonMusicPlayer(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            // Split each segment at first ":" to get label + value
                             val colonIdx = segment.indexOf(':')
                             if (colonIdx >= 0) {
                                 val label = segment.substring(0, colonIdx)
@@ -160,7 +161,6 @@ fun HorizonMusicPlayer(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                // Elapsed Time text
                 Text(
                     text = String.format("%d:%02d", currentTime / 60, currentTime % 60),
                     color = Color.Gray,
@@ -168,7 +168,6 @@ fun HorizonMusicPlayer(
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 )
-                // Waveform Graph columns row
                 Row(
                     modifier = Modifier
                         .weight(1f)
@@ -184,11 +183,10 @@ fun HorizonMusicPlayer(
                                 .fillMaxHeight(height / 100f)
                                 .padding(horizontal = 1.dp)
                                 .clip(RoundedCornerShape(99.dp))
-                                .background(if (isCompleted) BrandAccent else Color.DarkGray)
+                                .background(if (isCompleted) PlayerWaveActive else PlayerWaveInactive)
                         )
                     }
                 }
-                // Total duration text
                 Text(
                     text = String.format("%d:%02d", duration / 60, duration % 60),
                     color = Color.Gray,
@@ -204,7 +202,6 @@ fun HorizonMusicPlayer(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Rewind Button (-5 sec)
                 IconButton(
                     onClick = onRewind,
                     modifier = Modifier.size(40.dp)
@@ -217,23 +214,22 @@ fun HorizonMusicPlayer(
                     )
                 }
                 Spacer(modifier = Modifier.width(20.dp))
-                // Circular Play/Pause Button
+                // Circular Play/Pause Button — gray instead of green
                 IconButton(
                     onClick = onPlayPause,
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape)
-                        .background(BrandAccent)
+                        .background(PlayerAccent)
                 ) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "PlayPause",
-                        tint = Color.White,
+                        tint = Color(0xFF1A1A1A),
                         modifier = Modifier.size(28.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(20.dp))
-                // Forward Button (+5 sec)
                 IconButton(
                     onClick = onForward,
                     modifier = Modifier.size(40.dp)
