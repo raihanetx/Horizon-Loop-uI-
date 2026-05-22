@@ -703,6 +703,7 @@ fun TranslationPlayerScreen() {
             onPlayPause = { isPlaying = !isPlaying },
             onRewind = { currentTime = (currentTime - 5).coerceAtLeast(0) },
             onForward = { currentTime = (currentTime + 5).coerceAtMost(duration - 1) },
+            onSeek = { fraction -> currentTime = (fraction * duration).toInt().coerceIn(0, duration) },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

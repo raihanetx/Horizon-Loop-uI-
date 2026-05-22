@@ -3,11 +3,13 @@ package com.example.translationplayer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
@@ -41,11 +43,13 @@ val PlayPauseIcon = Color(0xFF1A1A1A)
 // ============================================================
 //  AUDIO VISUALIZATION — Smooth Waveform Line
 //  A continuous curvy waveform drawn on Canvas that undulates
-//  to feel alive during playback.
+//  to feel alive during playback. Supports tap-to-seek.
 // ============================================================
 @Composable
 fun WaveformLine(
     progressFraction: Float,
+    isPlaying: Boolean = true,
+    onSeek: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val pointCount = 36
@@ -55,13 +59,15 @@ fun WaveformLine(
         }
     }
 
-    // Animate the waveform curve every 120ms for a live feel
-    LaunchedEffect(Unit) {
-        while (true) {
-            kotlinx.coroutines.delay(120)
-            for (i in yOffsets.indices) {
-                yOffsets[i] = (yOffsets[i] + ((0..30).random() - 15) / 200f)
-                    .coerceIn(0.1f, 0.9f)
+    // Animate the waveform curve every 120ms — only undulates when playing
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            while (true) {
+                kotlinx.coroutines.delay(120)
+                for (i in yOffsets.indices) {
+                    yOffsets[i] = (yOffsets[i] + ((0..30).random() - 15) / 200f)
+                        .coerceIn(0.1f, 0.9f)
+                }
             }
         }
     }
@@ -70,6 +76,12 @@ fun WaveformLine(
         modifier = modifier
             .fillMaxWidth()
             .height(40.dp)
+            .pointerInput(Unit) {
+                detectTapGestures { offset ->
+                    val fraction = (offset.x / size.width).coerceIn(0f, 1f)
+                    onSeek(fraction)
+                }
+            }
     ) {
         val w = size.width
         val h = size.height
@@ -82,10 +94,10 @@ fun WaveformLine(
             Offset(i * stepX, midY + (yOffsets[i] - 0.5f) * amp)
         }
 
-        val splitIdx = (progressFraction * pointCount).toInt().coerceIn(1, pointCount - 1)
+        val splitIdx = (progressFraction * pointCount).toInt().coerceIn(0, pointCount - 1)
 
         // ── Played portion (light gray fill) ──
-        if (progressFraction > 0f) {
+        if (progressFraction > 0f && splitIdx > 0) {
             val p = Path()
             p.moveTo(pts[0].x, midY)
             p.lineTo(pts[0].x, pts[0].y)
@@ -100,10 +112,11 @@ fun WaveformLine(
 
         // ── Unplayed portion (dark gray fill) ──
         if (progressFraction < 1f && splitIdx < pointCount - 1) {
+            val startIdx = if (splitIdx == 0) 0 else splitIdx
             val p = Path()
-            p.moveTo(pts[splitIdx].x, midY)
-            p.lineTo(pts[splitIdx].x, pts[splitIdx].y)
-            for (i in splitIdx until pointCount - 1) {
+            p.moveTo(pts[startIdx].x, midY)
+            p.lineTo(pts[startIdx].x, pts[startIdx].y)
+            for (i in startIdx until pointCount - 1) {
                 val cx = (pts[i].x + pts[i + 1].x) / 2f
                 p.cubicTo(cx, pts[i].y, cx, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y)
             }
@@ -142,6 +155,7 @@ fun HorizonMusicPlayer(
     onPlayPause: () -> Unit,
     onRewind: () -> Unit,
     onForward: () -> Unit,
+    onSeek: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val progressFraction = if (duration > 0) currentTime.toFloat() / duration else 0f
@@ -194,19 +208,66 @@ fun HorizonMusicPlayer(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // ───────────── 2. STATUS LINE ─────────────
-            // Format: loop:1 | "quote text" | speed:2x
-            Text(
-                text = statusLine.ifEmpty { "${currentSpeed}x" },
-                color = TextSecondary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                letterSpacing = 0.3.sp,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+            // ───────────── 2. STATUS LINE — Styled Pills ─────────────
+            if (statusLine.isBlank()) {
+                Text(
+                    text = "${currentSpeed}x",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                val statusParts = remember(statusLine) {
+                    statusLine.split(" | ").map { it.trim() }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    statusParts.forEachIndexed { idx, part ->
+                        if (idx > 0) {
+                            Text(
+                                text = "•",
+                                color = TextTertiary.copy(alpha = 0.4f),
+                                fontSize = 8.sp,
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
+                        }
+                        // Split each part into label and value (e.g. "mode:clean" → "mode" + ":clean")
+                        val colonIdx = part.indexOf(':')
+                        val (label, value) = if (colonIdx >= 0) {
+                            part.substring(0, colonIdx) to part.substring(colonIdx)
+                        } else {
+                            "" to part
+                        }
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (label.isNotEmpty()) Color.White.copy(alpha = 0.04f) else Color.Transparent)
+                                .padding(horizontal = if (label.isNotEmpty()) 8.dp else 0.dp, vertical = if (label.isNotEmpty()) 3.dp else 0.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (label.isNotEmpty()) {
+                                Text(
+                                    text = label,
+                                    color = TextTertiary,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Text(
+                                text = value,
+                                color = TextPrimary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -217,6 +278,8 @@ fun HorizonMusicPlayer(
             ) {
                 WaveformLine(
                     progressFraction = progressFraction,
+                    isPlaying = isPlaying,
+                    onSeek = onSeek,
                     modifier = Modifier.fillMaxWidth()
                 )
 
