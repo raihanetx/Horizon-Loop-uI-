@@ -104,6 +104,17 @@ fun TranslationPlayerScreen() {
         index
     }
 
+    // Status line for the player card: loop:X | "quote" | speed:Yx
+    val statusLine = remember(currentSpeed, activeDialogueIndex, savedLoops.size) {
+        val quote = dialogueDataset[activeDialogueIndex].en
+        val loopCount = savedLoops.size
+        if (loopCount > 0) {
+            "loop:$loopCount | \"$quote\" | ${currentSpeed}x"
+        } else {
+            "\"$quote\" | ${currentSpeed}x"
+        }
+    }
+
     // Auto Scroll active dialogue line
     LaunchedEffect(activeDialogueIndex) {
         if (activeView == ActiveView.DIALOGUE) {
@@ -687,6 +698,7 @@ fun TranslationPlayerScreen() {
             currentTime = currentTime,
             duration = duration,
             currentSpeed = currentSpeed,
+            statusLine = statusLine,
             onPlayPause = { isPlaying = !isPlaying },
             onRewind = { currentTime = (currentTime - 5).coerceAtLeast(0) },
             onForward = { currentTime = (currentTime + 5).coerceAtMost(duration - 1) },

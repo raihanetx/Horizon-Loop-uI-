@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,12 +36,56 @@ val PlayPauseBg = Color(0xFFE0E0E0)
 val PlayPauseIcon = Color(0xFF1A1A1A)
 
 // ============================================================
+//  AUDIO VISUALIZATION — Mini Waveform
+//  30 bars that color based on playback progress
+// ============================================================
+@Composable
+fun MiniWaveform(
+    progressFraction: Float,
+    modifier: Modifier = Modifier
+) {
+    val barHeights = remember {
+        listOf(
+            0.20f, 0.35f, 0.55f, 0.75f, 0.90f, 1.00f, 0.85f, 0.65f, 0.50f, 0.30f,
+            0.25f, 0.40f, 0.60f, 0.80f, 0.95f, 1.00f, 0.90f, 0.70f, 0.55f, 0.35f,
+            0.20f, 0.30f, 0.50f, 0.70f, 0.85f, 1.00f, 0.95f, 0.75f, 0.55f, 0.35f
+        )
+    }
+    val barCount = barHeights.size
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(38.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        barHeights.forEachIndexed { index, height ->
+            val barPosition = index.toFloat() / barCount
+            val isPlayed = barPosition <= progressFraction
+
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .height((height * 36).dp.coerceAtLeast(2.dp))
+                    .clip(RoundedCornerShape(1.5.dp))
+                    .background(
+                        if (isPlayed) ProgressFilled
+                        else ProgressTrack
+                    )
+            )
+        }
+    }
+}
+
+// ============================================================
 //  MINIMAL MUSIC PLAYER CARD — Gray + White Theme
 //  Layout:
-//   1. Song Title (top)
-//   2. Artist / Relic text (middle)
-//   3. Timeline / Progress Bar (visualized)
-//   4. Backward ◀️  Play/Pause ▶️  Forward only
+//   1. Song Title
+//   2. Status line: loop:X | quote | speed:Yx
+//   3. Audio Visualization (Waveform)
+//   4. Time labels
+//   5. Backward ◀️  Play/Pause ▶️  Forward only
 // ============================================================
 @Composable
 fun HorizonMusicPlayer(
@@ -48,6 +93,7 @@ fun HorizonMusicPlayer(
     currentTime: Int,
     duration: Int,
     currentSpeed: Float,
+    statusLine: String = "",
     onPlayPause: () -> Unit,
     onRewind: () -> Unit,
     onForward: () -> Unit,
@@ -90,7 +136,7 @@ fun HorizonMusicPlayer(
             verticalArrangement = Arrangement.spacedBy(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ───────────── 1. MUSIC NAME ─────────────
+            // ───────────── 1. SONG TITLE ─────────────
             Text(
                 text = "The Middle",
                 color = TextPrimary,
@@ -101,66 +147,35 @@ fun HorizonMusicPlayer(
                 letterSpacing = 0.5.sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // ───────────── 2. SECOND RELIC (Artist) ─────────────
+            // ───────────── 2. STATUS LINE ─────────────
+            // Format: loop:1 | "quote text" | speed:2x
             Text(
-                text = "Zedd, Maren Morris, Grey",
+                text = statusLine.ifEmpty { "${currentSpeed}x" },
                 color = TextSecondary,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Normal,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                letterSpacing = 0.3.sp
+                letterSpacing = 0.3.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // ───────────── 3. TIMELINE (Progress Bar) ─────────────
+            // ───────────── 3. AUDIO VISUALIZATION ─────────────
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Progress bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(ProgressTrack)
-                ) {
-                    // Filled portion
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(progressFraction.coerceIn(0f, 1f))
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        ProgressFilled,
-                                        ProgressFilled.copy(alpha = 0.7f)
-                                    )
-                                )
-                            )
-                    )
-                    // Playhead dot
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(progressFraction.coerceIn(0f, 1f))
-                            .fillMaxHeight(),
-                        contentAlignment = Alignment.CenterEnd
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                        )
-                    }
-                }
+                MiniWaveform(
+                    progressFraction = progressFraction,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                // Time labels
+                // Time labels below waveform
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -182,7 +197,7 @@ fun HorizonMusicPlayer(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ───────────── 4. CONTROLS: Backward ◀️  Play/Pause ▶️  Forward only ─────────────
+            // ───────────── 4. CONTROLS ─────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -212,7 +227,7 @@ fun HorizonMusicPlayer(
 
                 Spacer(modifier = Modifier.width(28.dp))
 
-                // Play/Pause (larger center button)
+                // Play/Pause
                 Box(
                     modifier = Modifier
                         .size(60.dp)
