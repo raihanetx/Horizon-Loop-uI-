@@ -656,7 +656,7 @@ fun TranslationPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 4.dp)
             ) {
                 when (activeView) {
                     ActiveView.CLEAN -> {
