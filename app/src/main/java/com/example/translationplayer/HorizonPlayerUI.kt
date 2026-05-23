@@ -86,7 +86,7 @@ fun HorizonMusicPlayer(
                 Text(
                     text = songTitle,
                     color = PText,
-                    fontSize = 13.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -101,9 +101,9 @@ fun HorizonMusicPlayer(
                             if (idx > 0) {
                                 Text(
                                     text = " | ",
-                                    color = PText,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                             val colonIdx = segment.indexOf(':')
@@ -113,29 +113,29 @@ fun HorizonMusicPlayer(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = label,
-                                        color = PText,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
+                                        color = TextSecondary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
                                     )
                                     Text(
                                         text = ":",
-                                        color = PText,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
+                                        color = TextSecondary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
                                     )
                                     Text(
                                         text = value,
                                         color = PText,
-                                        fontSize = 13.sp,
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             } else {
                                 Text(
                                     text = segment,
-                                    color = PText,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -143,9 +143,9 @@ fun HorizonMusicPlayer(
                 } else {
                     Text(
                         text = "${currentSpeed}x",
-                        color = PText,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -160,9 +160,9 @@ fun HorizonMusicPlayer(
             ) {
                 Text(
                     text = String.format("%d:%02d", currentTime / 60, currentTime % 60),
-                    color = PText,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Row(
                     modifier = Modifier
@@ -198,9 +198,9 @@ fun HorizonMusicPlayer(
                 }
                 Text(
                     text = String.format("%d:%02d", duration / 60, duration % 60),
-                    color = PText,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
 

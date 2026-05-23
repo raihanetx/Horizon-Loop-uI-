@@ -522,98 +522,33 @@ fun TranslationPlayerScreen(
                 .padding(bottom = 190.dp)
         ) {
             // ================================================================
-            //  HEADER: Profile info + Left-aligned icons (no background)
+            //  HEADER: Back button + Left-aligned icons (no profile section)
             // ================================================================
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                // --- Top: Back + Profile ---
+                // --- Back button ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(BrandAccent.copy(alpha = 0.1f))
+                            .border(1.dp, DividerColor, CircleShape)
+                            .clickable { onHomeClick() },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape)
-                                .background(BrandAccent.copy(alpha = 0.1f))
-                                .border(1.dp, DividerColor, CircleShape)
-                                .clickable { onHomeClick() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Home",
-                                tint = BrandAccent,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(BrandAccent.copy(alpha = 0.1f))
-                                .border(1.dp, DividerColor, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = BrandAccent,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "Alex Mercer",
-                                color = TextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = "Horizon Loop",
-                                    color = TextSecondary,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "|",
-                                    color = DividerColor,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "Pro v1.2.0",
-                                    color = BrandAccent,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                    // Right side: Send + Profile icons
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        IconButton(onClick = { /* Navigate to translation */ },
-                            modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Send, contentDescription = "Send",
-                                tint = BrandAccent, modifier = Modifier.size(18.dp))
-                        }
-                        IconButton(onClick = { onProfileClick() },
-                            modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Person, contentDescription = "Profile",
-                                tint = BrandAccent, modifier = Modifier.size(18.dp))
-                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Home",
+                            tint = BrandAccent,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 
@@ -671,7 +606,7 @@ fun TranslationPlayerScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Repeat,
+                            imageVector = Icons.Default.Loop,
                             contentDescription = "Loop",
                             tint = if (activeView == ActiveView.LOOP) BrandAccent else TextSecondary,
                             modifier = Modifier.size(22.dp)
@@ -693,7 +628,7 @@ fun TranslationPlayerScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.EditNote,
+                            imageVector = Icons.Default.Notes,
                             contentDescription = "Notes",
                             tint = if (activeView == ActiveView.NOTES) BrandAccent else TextSecondary,
                             modifier = Modifier.size(22.dp)
