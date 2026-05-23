@@ -2,6 +2,8 @@ package com.example.translationplayer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,17 +21,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Light theme player card colors
-private val PlayerCardBg = Color(0xFFFFFFFF)
-private val PlayerAccent = Color(0xFF3A3A3C)
-private val PlayerWaveActive = Color(0xFF3A3A3C)
-private val PlayerWaveInactive = Color(0xFFE5E5EA)
-private val PlayerTextPrimary = Color(0xFF1C1C1E)
+// ============================================================
+//  DARK THEME PLAYER CARD COLORS
+// ============================================================
+private val PCardBg = Color(0xFF1A1A1A)
+private val PAccent = Color(0xFFCCCCCC)
+private val PWaveActive = Color(0xFFCCCCCC)
+private val PWaveInactive = Color(0xFF333333)
+private val PText = Color(0xFFE8E8E8)
 
 @Composable
 fun HorizonMusicPlayer(
@@ -45,12 +49,10 @@ fun HorizonMusicPlayer(
     onSeek: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Waveform Column Sizing Percentages
     val waveformHeights = listOf(
         25, 45, 15, 60, 75, 40, 30, 50, 85, 60, 45, 70, 95, 55, 30, 50, 75, 90, 65, 40, 55, 80, 50, 35, 40, 60, 30, 45, 20, 35
     )
 
-    // Parse status line into segments separated by ` | `
     val statusSegments = remember(statusLine) {
         if (statusLine.isNotBlank()) {
             statusLine.split(" | ").map { it.trim() }
@@ -64,10 +66,10 @@ fun HorizonMusicPlayer(
             .fillMaxWidth()
             .height(190.dp)
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(PlayerCardBg)
+            .background(PCardBg)
             .border(
                 width = 1.dp,
-                color = Color(0xFFD1D1D6).copy(alpha = 0.5f),
+                color = Color(0xFF333333),
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             )
             .padding(vertical = 16.dp, horizontal = 20.dp)
@@ -76,20 +78,19 @@ fun HorizonMusicPlayer(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // --- ZONE 1: Title & Status Section ---
+            // --- ZONE 1: Title & Status ---
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = songTitle,
-                    color = PlayerTextPrimary,
-                    fontSize = 16.sp,
+                    color = PText,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Dynamic status line with | separators
                 if (statusSegments.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -100,8 +101,8 @@ fun HorizonMusicPlayer(
                             if (idx > 0) {
                                 Text(
                                     text = " | ",
-                                    color = TextSecondary,
-                                    fontSize = 11.sp,
+                                    color = PText,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -112,28 +113,28 @@ fun HorizonMusicPlayer(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = label,
-                                        color = TextSecondary,
-                                        fontSize = 11.sp,
+                                        color = PText,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = ":",
-                                        color = TextSecondary,
-                                        fontSize = 11.sp,
+                                        color = PText,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = value,
-                                        color = PlayerTextPrimary,
-                                        fontSize = 11.sp,
+                                        color = PText,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             } else {
                                 Text(
                                     text = segment,
-                                    color = PlayerTextPrimary,
-                                    fontSize = 11.sp,
+                                    color = PText,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -142,14 +143,14 @@ fun HorizonMusicPlayer(
                 } else {
                     Text(
                         text = "${currentSpeed}x",
-                        color = TextSecondary,
-                        fontSize = 11.sp,
+                        color = PText,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // --- ZONE 2: Waveform Progress Section ---
+            // --- ZONE 2: Interactive Waveform ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,15 +160,27 @@ fun HorizonMusicPlayer(
             ) {
                 Text(
                     text = String.format("%d:%02d", currentTime / 60, currentTime % 60),
-                    color = TextSecondary,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace
+                    color = PText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
                 )
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .pointerInput(Unit) {
+                            detectTapGestures { offset ->
+                                val fraction = (offset.x / size.width).coerceIn(0f, 1f)
+                                onSeek(fraction)
+                            }
+                        }
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures { change, _ ->
+                                change.consume()
+                                val fraction = (change.position.x / size.width).coerceIn(0f, 1f)
+                                onSeek(fraction)
+                            }
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -179,20 +192,19 @@ fun HorizonMusicPlayer(
                                 .fillMaxHeight(height / 100f)
                                 .padding(horizontal = 1.dp)
                                 .clip(RoundedCornerShape(99.dp))
-                                .background(if (isCompleted) PlayerWaveActive else PlayerWaveInactive)
+                                .background(if (isCompleted) PWaveActive else PWaveInactive)
                         )
                     }
                 }
                 Text(
                     text = String.format("%d:%02d", duration / 60, duration % 60),
-                    color = TextSecondary,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace
+                    color = PText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // --- ZONE 3: Media Control Buttons ---
+            // --- ZONE 3: Media Controls ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -205,7 +217,7 @@ fun HorizonMusicPlayer(
                     Icon(
                         imageVector = Icons.Default.FastRewind,
                         contentDescription = "Rewind",
-                        tint = PlayerTextPrimary,
+                        tint = PText,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -215,12 +227,12 @@ fun HorizonMusicPlayer(
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape)
-                        .background(PlayerAccent)
+                        .background(PAccent)
                 ) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "PlayPause",
-                        tint = Color.White,
+                        tint = Color(0xFF1A1A1A),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -232,7 +244,7 @@ fun HorizonMusicPlayer(
                     Icon(
                         imageVector = Icons.Default.FastForward,
                         contentDescription = "Forward",
-                        tint = PlayerTextPrimary,
+                        tint = PText,
                         modifier = Modifier.size(24.dp)
                     )
                 }

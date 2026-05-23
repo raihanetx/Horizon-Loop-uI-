@@ -36,14 +36,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ============================================================
-//  LIGHT / WHITE COLOR THEME ("Snow background")
+//  DARK THEME COLORS
 // ============================================================
-val BrandBg = Color(0xFFF2F2F7)        // Light gray background
-val BrandCard = Color(0xFFFFFFFF)       // White card
-val BrandAccent = Color(0xFF3A3A3C)     // Dark gray accent
-val DividerColor = Color(0xFFD1D1D6)   // Light divider
-val TextSecondary = Color(0xFF8E8E93)   // iOS-style secondary text
-val TextPrimary = Color(0xFF1C1C1E)     // Near-black primary text
+val BrandBg = Color(0xFF121212)        // Near-black background
+val BrandCard = Color(0xFF1E1E1E)      // Dark card
+val BrandAccent = Color(0xFFCCCCCC)    // Light gray accent
+val DividerColor = Color(0xFF333333)   // Dark divider
+val TextSecondary = Color(0xFF8E8E93)  // Gray secondary text
+val TextPrimary = Color(0xFFF5F5F5)    // Near-white text
 
 // ============================================================
 //  DATA STRUCTURES
@@ -140,12 +140,11 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Profile avatar
                     Box(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(BrandAccent.copy(alpha = 0.08f))
+                            .background(BrandAccent.copy(alpha = 0.1f))
                             .border(1.dp, DividerColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
@@ -222,7 +221,6 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            // Cover art placeholder
                             Box(
                                 modifier = Modifier
                                     .size(44.dp)
@@ -233,11 +231,10 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = Icons.Default.MusicNote,
                                     contentDescription = null,
-                                    tint = Color.Gray,
+                                    tint = TextSecondary,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
-                            // Song info
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = song.title,
@@ -252,7 +249,6 @@ fun HomeScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            // Duration
                             Text(
                                 text = String.format("%d:%02d", song.duration / 60, song.duration % 60),
                                 color = TextSecondary,
@@ -260,7 +256,6 @@ fun HomeScreen(
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold
                             )
-                            // Play icon
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
                                 contentDescription = "Play",
@@ -276,7 +271,7 @@ fun HomeScreen(
 }
 
 // ============================================================
-//  PROFILE SCREEN — Full Page (Light Theme)
+//  PROFILE SCREEN — Full Page
 // ============================================================
 @Composable
 fun ProfileScreen(
@@ -302,7 +297,7 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(34.dp)
                         .clip(CircleShape)
-                        .background(BrandAccent.copy(alpha = 0.06f))
+                        .background(BrandAccent.copy(alpha = 0.1f))
                         .border(1.dp, DividerColor, CircleShape)
                         .clickable { onBack() },
                     contentAlignment = Alignment.Center
@@ -344,7 +339,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .size(52.dp)
                             .clip(CircleShape)
-                            .background(BrandAccent.copy(alpha = 0.08f))
+                            .background(BrandAccent.copy(alpha = 0.1f))
                             .border(1.dp, DividerColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
@@ -396,7 +391,7 @@ fun ProfileScreen(
                     )
                 }
 
-                // Voice Engine — only Whisper Large v3
+                // Voice Engine
                 Column {
                     Text(
                         text = "Voice Engine",
@@ -410,7 +405,7 @@ fun ProfileScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
                             .background(BrandCard)
-                            .border(1.dp, BrandAccent.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                            .border(1.dp, BrandAccent.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                             .padding(horizontal = 14.dp, vertical = 14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -453,7 +448,6 @@ fun TranslationPlayerScreen(
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
-    // --- STATE MANAGEMENT ---
     var activeView by remember { mutableStateOf(ActiveView.CLEAN) }
     var isPlaying by remember { mutableStateOf(false) }
     var currentTime by remember { mutableStateOf(0) }
@@ -462,18 +456,12 @@ fun TranslationPlayerScreen(
     val speeds = listOf(1.0f, 1.25f, 1.5f, 2.0f, 0.5f, 0.75f)
     val currentSpeed = speeds[speedIndex]
 
-    // Form Toggle States
     var isLoopFormOpen by remember { mutableStateOf(false) }
     var isNoteFormOpen by remember { mutableStateOf(false) }
-
-    // Selection States
     val selectedDialogueIndices = remember { mutableStateListOf<Int>() }
-
-    // Dynamic Lists
     val savedLoops = remember { mutableStateListOf<SavedLoop>() }
     val savedNotes = remember { mutableStateListOf<SavedNote>() }
 
-    // Form inputs
     var loopNameInput by remember { mutableStateOf("") }
     var loopStartInput by remember { mutableStateOf("0") }
     var loopEndInput by remember { mutableStateOf("0") }
@@ -483,7 +471,6 @@ fun TranslationPlayerScreen(
     val coroutineScope = rememberCoroutineScope()
     val dialogueListState = rememberLazyListState()
 
-    // Active Dialogue Selection logic based on time
     val activeDialogueIndex = remember(currentTime) {
         var index = 0
         for (i in dialogueDataset.indices) {
@@ -494,7 +481,6 @@ fun TranslationPlayerScreen(
         index
     }
 
-    // Status line: Mode:clean | Loop: one | Speed:2X
     val statusLine = remember(currentSpeed, activeView, savedLoops.size) {
         val viewName = activeView.name.lowercase()
         val loopWord = when (savedLoops.size) {
@@ -507,7 +493,6 @@ fun TranslationPlayerScreen(
         "Mode:$viewName | Loop: $loopWord | Speed:${currentSpeed}X"
     }
 
-    // Auto-advance currentTime when playing
     LaunchedEffect(isPlaying, currentSpeed) {
         if (isPlaying) {
             while (currentTime < duration) {
@@ -518,7 +503,6 @@ fun TranslationPlayerScreen(
         }
     }
 
-    // Auto Scroll active dialogue line
     LaunchedEffect(activeDialogueIndex) {
         if (activeView == ActiveView.DIALOGUE) {
             coroutineScope.launch {
@@ -527,7 +511,6 @@ fun TranslationPlayerScreen(
         }
     }
 
-    // --- MAIN SCREEN LAYOUT ---
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -536,35 +519,31 @@ fun TranslationPlayerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 190.dp) // Leave space for the player card
+                .padding(bottom = 190.dp)
         ) {
             // ================================================================
-            //  RESTRUCTURED HEADER
-            //  Left: Profile avatar + name column + subtitle
-            //  Below: Icon bar with Speed first, then rest
+            //  HEADER: Profile info + Left-aligned icons (no background)
             // ================================================================
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                // --- Top Row: Profile + Back ---
+                // --- Top: Back + Profile ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Left: Back button + Profile avatar + Name column
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Back button
                         Box(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape)
-                                .background(BrandAccent.copy(alpha = 0.06f))
+                                .background(BrandAccent.copy(alpha = 0.1f))
                                 .border(1.dp, DividerColor, CircleShape)
                                 .clickable { onHomeClick() },
                             contentAlignment = Alignment.Center
@@ -576,12 +555,11 @@ fun TranslationPlayerScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                         }
-                        // Profile avatar
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(BrandAccent.copy(alpha = 0.08f))
+                                .background(BrandAccent.copy(alpha = 0.1f))
                                 .border(1.dp, DividerColor, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
@@ -592,7 +570,6 @@ fun TranslationPlayerScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        // Name + subtitle
                         Column {
                             Text(
                                 text = "Alex Mercer",
@@ -625,60 +602,64 @@ fun TranslationPlayerScreen(
                             }
                         }
                     }
+                    // Right side: Send + Profile icons
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        IconButton(onClick = { /* Navigate to translation */ },
+                            modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Send, contentDescription = "Send",
+                                tint = BrandAccent, modifier = Modifier.size(18.dp))
+                        }
+                        IconButton(onClick = { onProfileClick() },
+                            modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Person, contentDescription = "Profile",
+                                tint = BrandAccent, modifier = Modifier.size(18.dp))
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Icon Bar: Speed first, then other icons ---
+                // --- Icon Row: Speed, Mode, Loop, Notes — LEFT-ALIGNED, NO BACKGROUND ---
                 Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(BrandCard)
-                        .border(1.dp, DividerColor, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Speed (first)
+                    // Speed
                     Text(
                         text = "${currentSpeed}x",
                         color = BrandAccent,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(BrandAccent.copy(alpha = 0.08f))
+                            .background(BrandAccent.copy(alpha = 0.1f))
                             .clickable { speedIndex = (speedIndex + 1) % speeds.size }
                             .padding(horizontal = 10.dp, vertical = 8.dp)
                     )
 
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    // Mode Toggle
-                    IconButton(
-                        onClick = {
-                            activeView = if (activeView == ActiveView.CLEAN) ActiveView.DIALOGUE else ActiveView.CLEAN
-                        },
-                        modifier = Modifier.size(32.dp)
+                    // Mode
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                activeView = if (activeView == ActiveView.CLEAN) ActiveView.DIALOGUE else ActiveView.CLEAN
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = if (activeView == ActiveView.DIALOGUE) Icons.Default.Subtitles else Icons.Default.Visibility,
-                            contentDescription = "Toggle Mode",
+                            contentDescription = "Mode",
                             tint = if (activeView == ActiveView.DIALOGUE || activeView == ActiveView.CLEAN) BrandAccent else TextSecondary,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(2.dp))
 
                     // Loop
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(34.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.LOOP },
@@ -693,18 +674,14 @@ fun TranslationPlayerScreen(
                             imageVector = Icons.Default.Repeat,
                             contentDescription = "Loop",
                             tint = if (activeView == ActiveView.LOOP) BrandAccent else TextSecondary,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(2.dp))
 
                     // Notes
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(34.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.NOTES },
@@ -719,43 +696,13 @@ fun TranslationPlayerScreen(
                             imageVector = Icons.Default.EditNote,
                             contentDescription = "Notes",
                             tint = if (activeView == ActiveView.NOTES) BrandAccent else TextSecondary,
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
-                    Spacer(modifier = Modifier.width(2.dp))
-
-                    // Send to Translation
-                    IconButton(
-                        onClick = { /* Navigate to translation */ },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = "Send",
-                            tint = BrandAccent,
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
-
-                    // Profile
-                    IconButton(
-                        onClick = { onProfileClick() },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = BrandAccent,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
             }
 
-            // --- VIEW CONDITIONAL SWITCHING ---
+            // --- VIEW SWITCHING ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -802,16 +749,16 @@ fun TranslationPlayerScreen(
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(
                                             when {
-                                                isSelected -> BrandAccent.copy(alpha = 0.06f)
-                                                isCurrentPlaying -> BrandAccent.copy(alpha = 0.03f)
+                                                isSelected -> BrandAccent.copy(alpha = 0.08f)
+                                                isCurrentPlaying -> Color.White.copy(alpha = 0.04f)
                                                 else -> BrandCard
                                             }
                                         )
                                         .border(
                                             width = 1.dp,
                                             color = when {
-                                                isSelected -> BrandAccent.copy(alpha = 0.25f)
-                                                isCurrentPlaying -> BrandAccent.copy(alpha = 0.15f)
+                                                isSelected -> BrandAccent.copy(alpha = 0.3f)
+                                                isCurrentPlaying -> Color.White.copy(alpha = 0.1f)
                                                 else -> DividerColor
                                             },
                                             shape = RoundedCornerShape(12.dp)
@@ -838,7 +785,6 @@ fun TranslationPlayerScreen(
                                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                                             verticalAlignment = Alignment.Top
                                         ) {
-                                            // Timestamp badge
                                             Text(
                                                 text = String.format("%02d:%02d", item.start / 60, item.start % 60),
                                                 color = if (isCurrentPlaying) BrandAccent else TextSecondary,
@@ -847,13 +793,12 @@ fun TranslationPlayerScreen(
                                                 fontWeight = FontWeight.Black,
                                                 modifier = Modifier
                                                     .background(
-                                                        if (isCurrentPlaying) BrandAccent.copy(alpha = 0.12f)
-                                                        else BrandAccent.copy(alpha = 0.04f),
+                                                        if (isCurrentPlaying) BrandAccent.copy(alpha = 0.15f)
+                                                        else Color.White.copy(alpha = 0.06f),
                                                         RoundedCornerShape(6.dp)
                                                     )
                                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                                             )
-                                            // Playing indicator dot (only when current)
                                             if (isCurrentPlaying) {
                                                 Box(
                                                     modifier = Modifier
@@ -863,7 +808,6 @@ fun TranslationPlayerScreen(
                                                         .background(BrandAccent)
                                                 )
                                             }
-                                            // Dialogue text column
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = "\"${item.en}\"",
@@ -878,7 +822,7 @@ fun TranslationPlayerScreen(
                                                 Text(
                                                     text = "\"${item.bn}\"",
                                                     color = when {
-                                                        isSelected || isCurrentPlaying -> BrandAccent.copy(alpha = 0.85f)
+                                                        isSelected || isCurrentPlaying -> BrandAccent.copy(alpha = 0.9f)
                                                         else -> TextSecondary
                                                     },
                                                     fontSize = 11.sp,
@@ -888,14 +832,13 @@ fun TranslationPlayerScreen(
                                                 )
                                             }
                                         }
-                                        // Selection check circle
                                         Box(
                                             modifier = Modifier
                                                 .size(28.dp)
                                                 .clip(CircleShape)
                                                 .background(
                                                     if (isSelected) BrandAccent
-                                                    else BrandAccent.copy(alpha = 0.06f)
+                                                    else Color.White.copy(alpha = 0.06f)
                                                 )
                                                 .border(
                                                     1.5.dp,
@@ -907,7 +850,7 @@ fun TranslationPlayerScreen(
                                             Icon(
                                                 imageVector = if (isSelected) Icons.Default.Check else Icons.Default.Add,
                                                 contentDescription = "Select",
-                                                tint = if (isSelected) Color.White else TextSecondary,
+                                                tint = if (isSelected) BrandBg else TextSecondary,
                                                 modifier = Modifier.size(16.dp)
                                             )
                                         }
@@ -918,7 +861,7 @@ fun TranslationPlayerScreen(
                     }
                     ActiveView.LOOP -> {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            // Saved Loop Title Label
+                            // --- Saved Loops ---
                             Text(
                                 text = "Saved Loops",
                                 color = TextSecondary,
@@ -927,66 +870,103 @@ fun TranslationPlayerScreen(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
-                            // Saved Loops List Shelf
                             LazyColumn(modifier = Modifier.weight(1f)) {
                                 itemsIndexed(savedLoops) { index, loop ->
-                                    Row(
+                                    Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(56.dp)
+                                            .clip(RoundedCornerShape(14.dp))
                                             .background(BrandCard)
-                                            .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                            .border(1.dp, DividerColor, RoundedCornerShape(14.dp))
+                                            .padding(14.dp)
                                     ) {
-                                        Column {
-                                            Text(
-                                                text = loop.name,
-                                                color = TextPrimary,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Text(
-                                                text = "A:${loop.start}s │ B:${loop.end}s │ repeats: ${if (loop.repeats == 999) "∞" else "${loop.repeats}x"}",
-                                                color = BrandAccent,
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = FontFamily.Monospace
-                                            )
-                                        }
-                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            IconButton(
-                                                onClick = {
-                                                    currentTime = loop.start
-                                                    isPlaying = true
-                                                },
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            // Left: Play button
+                                            Box(
                                                 modifier = Modifier
-                                                    .size(28.dp)
-                                                    .background(BrandAccent.copy(alpha = 0.12f), CircleShape)
-                                                    .border(1.dp, BrandAccent.copy(alpha = 0.25f), CircleShape)
+                                                    .size(42.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(BrandAccent.copy(alpha = 0.12f))
+                                                    .border(1.dp, BrandAccent.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                                    .clickable {
+                                                        currentTime = loop.start
+                                                        isPlaying = true
+                                                    },
+                                                contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.PlayArrow,
-                                                    contentDescription = "Load loop",
+                                                    contentDescription = "Play loop",
                                                     tint = BrandAccent,
-                                                    modifier = Modifier.size(15.dp)
+                                                    modifier = Modifier.size(24.dp)
                                                 )
                                             }
-                                            IconButton(
-                                                onClick = { savedLoops.removeAt(index) },
+                                            // Center: Loop details
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = loop.name,
+                                                    color = TextPrimary,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Row(
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    // Start badge
+                                                    Text(
+                                                        text = "A:${loop.start}s",
+                                                        color = BrandAccent,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.Monospace,
+                                                        modifier = Modifier
+                                                            .background(BrandAccent.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    )
+                                                    // End badge
+                                                    Text(
+                                                        text = "B:${loop.end}s",
+                                                        color = BrandAccent,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.Monospace,
+                                                        modifier = Modifier
+                                                            .background(BrandAccent.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    )
+                                                    // Repeats badge
+                                                    Text(
+                                                        text = if (loop.repeats == 999) "∞" else "${loop.repeats}x",
+                                                        color = TextSecondary,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.Monospace
+                                                    )
+                                                }
+                                            }
+                                            // Right: Delete
+                                            Box(
                                                 modifier = Modifier
-                                                    .size(28.dp)
-                                                    .background(BrandAccent.copy(alpha = 0.05f), CircleShape)
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color.White.copy(alpha = 0.05f))
                                                     .border(1.dp, DividerColor, CircleShape)
+                                                    .clickable { savedLoops.removeAt(index) },
+                                                contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Delete loop",
+                                                    contentDescription = "Delete",
                                                     tint = TextSecondary,
-                                                    modifier = Modifier.size(15.dp)
+                                                    modifier = Modifier.size(18.dp)
                                                 )
                                             }
                                         }
@@ -995,7 +975,7 @@ fun TranslationPlayerScreen(
                                 }
                             }
 
-                            // Loop Adding Interface Form
+                            // Loop Add Form
                             AnimatedVisibility(
                                 visible = isLoopFormOpen,
                                 enter = slideInVertically { it } + fadeIn(),
@@ -1004,11 +984,12 @@ fun TranslationPlayerScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(BrandCard, RoundedCornerShape(12.dp))
-                                        .border(1.dp, DividerColor, RoundedCornerShape(12.dp))
+                                        .background(BrandCard, RoundedCornerShape(14.dp))
+                                        .border(1.dp, DividerColor, RoundedCornerShape(14.dp))
                                         .padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
+                                    Text("New Loop", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1016,28 +997,29 @@ fun TranslationPlayerScreen(
                                         OutlinedTextField(
                                             value = loopNameInput,
                                             onValueChange = { loopNameInput = it },
-                                            label = { Text("Loop Name", fontSize = 8.sp) },
+                                            label = { Text("Name", fontSize = 10.sp, color = TextSecondary) },
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = DividerColor
+                                                unfocusedBorderColor = DividerColor,
+                                                focusedTextColor = TextPrimary,
+                                                unfocusedTextColor = TextPrimary
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
                                         OutlinedTextField(
                                             value = loopRepeatsSelection.toString(),
-                                            onValueChange = {
-                                                loopRepeatsSelection = it.toIntOrNull() ?: 1
-                                            },
-                                            label = { Text("Repeats", fontSize = 8.sp) },
+                                            onValueChange = { loopRepeatsSelection = it.toIntOrNull() ?: 1 },
+                                            label = { Text("Repeats", fontSize = 10.sp, color = TextSecondary) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = DividerColor
+                                                unfocusedBorderColor = DividerColor,
+                                                focusedTextColor = TextPrimary,
+                                                unfocusedTextColor = TextPrimary
                                             ),
                                             modifier = Modifier.width(80.dp)
                                         )
                                     }
-
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1045,27 +1027,30 @@ fun TranslationPlayerScreen(
                                         OutlinedTextField(
                                             value = loopStartInput,
                                             onValueChange = { loopStartInput = it },
-                                            label = { Text("Start (sec)", fontSize = 8.sp) },
+                                            label = { Text("Start (sec)", fontSize = 10.sp, color = TextSecondary) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = DividerColor
+                                                unfocusedBorderColor = DividerColor,
+                                                focusedTextColor = TextPrimary,
+                                                unfocusedTextColor = TextPrimary
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
                                         OutlinedTextField(
                                             value = loopEndInput,
                                             onValueChange = { loopEndInput = it },
-                                            label = { Text("End (sec)", fontSize = 8.sp) },
+                                            label = { Text("End (sec)", fontSize = 10.sp, color = TextSecondary) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = DividerColor
+                                                unfocusedBorderColor = DividerColor,
+                                                focusedTextColor = TextPrimary,
+                                                unfocusedTextColor = TextPrimary
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
                                     }
-
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1075,12 +1060,15 @@ fun TranslationPlayerScreen(
                                                 currentTime = loopStartInput.toIntOrNull() ?: 0
                                                 isPlaying = true
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = BrandAccent.copy(alpha = 0.08f)),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = BrandAccent.copy(alpha = 0.1f),
+                                                contentColor = BrandAccent
+                                            ),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Icon(Icons.Default.PlayArrow, contentDescription = "Try", tint = BrandAccent)
+                                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("Preview", fontSize = 10.sp, color = BrandAccent, fontWeight = FontWeight.Bold)
+                                            Text("Preview", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                         }
                                         Button(
                                             onClick = {
@@ -1100,11 +1088,11 @@ fun TranslationPlayerScreen(
                                             },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = BrandAccent,
-                                                contentColor = Color.White
+                                                contentColor = BrandBg
                                             ),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Text("Save Loop", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            Text("Save", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -1113,6 +1101,7 @@ fun TranslationPlayerScreen(
                     }
                     ActiveView.NOTES -> {
                         Column(modifier = Modifier.fillMaxSize()) {
+                            // --- Saved Notes ---
                             Text(
                                 text = "Saved Notes",
                                 color = TextSecondary,
@@ -1121,45 +1110,83 @@ fun TranslationPlayerScreen(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
-                            // Saved Notes list
                             LazyColumn(modifier = Modifier.weight(1f)) {
                                 itemsIndexed(savedNotes) { index, note ->
-                                    Row(
+                                    Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(56.dp)
+                                            .clip(RoundedCornerShape(14.dp))
                                             .background(BrandCard)
-                                            .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                            .border(1.dp, DividerColor, RoundedCornerShape(14.dp))
+                                            .padding(14.dp)
                                     ) {
-                                        Text(
-                                            text = note.text,
-                                            color = TextPrimary,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        IconButton(
-                                            onClick = { savedNotes.removeAt(index) },
-                                            modifier = Modifier.size(24.dp)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Delete,
-                                                contentDescription = "Delete",
-                                                tint = TextSecondary,
-                                                modifier = Modifier.size(15.dp)
-                                            )
+                                            // Left: Note icon
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(42.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(BrandAccent.copy(alpha = 0.1f))
+                                                    .border(1.dp, BrandAccent.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.EditNote,
+                                                    contentDescription = null,
+                                                    tint = BrandAccent,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            // Center: Note text + timestamp
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = note.text,
+                                                    color = TextPrimary,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = "@ ${String.format("%d:%02d", note.time / 60, note.time % 60)}",
+                                                    color = TextSecondary,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    modifier = Modifier
+                                                        .background(BrandAccent.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                            // Right: Delete
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color.White.copy(alpha = 0.05f))
+                                                    .border(1.dp, DividerColor, CircleShape)
+                                                    .clickable { savedNotes.removeAt(index) },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = "Delete",
+                                                    tint = TextSecondary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
                                         }
                                     }
                                     Spacer(modifier = Modifier.height(10.dp))
                                 }
                             }
 
-                            // Note Adding Interface Form
+                            // Note Add Form
                             AnimatedVisibility(
                                 visible = isNoteFormOpen,
                                 enter = slideInVertically { it } + fadeIn(),
@@ -1168,35 +1195,35 @@ fun TranslationPlayerScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(BrandCard, RoundedCornerShape(12.dp))
-                                        .border(1.dp, DividerColor, RoundedCornerShape(12.dp))
+                                        .background(BrandCard, RoundedCornerShape(14.dp))
+                                        .border(1.dp, DividerColor, RoundedCornerShape(14.dp))
                                         .padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Text(
-                                        text = "Study Notebook",
-                                        color = TextSecondary,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Text("New Note", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                     OutlinedTextField(
                                         value = noteTextInput,
                                         onValueChange = { noteTextInput = it },
-                                        placeholder = { Text("Write a study note...", fontSize = 12.sp) },
+                                        placeholder = { Text("Write a study note...", fontSize = 12.sp, color = TextSecondary) },
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = BrandAccent,
-                                            unfocusedBorderColor = DividerColor
+                                            unfocusedBorderColor = DividerColor,
+                                            focusedTextColor = TextPrimary,
+                                            unfocusedTextColor = TextPrimary
                                         ),
                                         modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Text(
+                                        text = "Current time: ${String.format("%d:%02d", currentTime / 60, currentTime % 60)}",
+                                        color = TextSecondary,
+                                        fontSize = 10.sp,
+                                        fontFamily = FontFamily.Monospace
                                     )
                                     Button(
                                         onClick = {
                                             if (noteTextInput.isNotBlank()) {
                                                 savedNotes.add(
-                                                    SavedNote(
-                                                        time = currentTime,
-                                                        text = noteTextInput
-                                                    )
+                                                    SavedNote(time = currentTime, text = noteTextInput)
                                                 )
                                                 noteTextInput = ""
                                                 isNoteFormOpen = false
@@ -1204,11 +1231,11 @@ fun TranslationPlayerScreen(
                                         },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = BrandAccent,
-                                            contentColor = Color.White
+                                            contentColor = BrandBg
                                         ),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text("Add Note to Notebook", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Add Note", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -1218,7 +1245,6 @@ fun TranslationPlayerScreen(
             }
         }
 
-        // --- HORIZON MUSIC PLAYER (Fixed at bottom) ---
         HorizonMusicPlayer(
             songTitle = songTitle,
             isPlaying = isPlaying,
