@@ -36,13 +36,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ============================================================
-//  GRAY + WHITE COLOR THEME
+//  LIGHT / WHITE COLOR THEME ("Snow background")
 // ============================================================
-val BrandBg = Color(0xFF121212)
-val BrandCard = Color(0xFF1A1A1A)
-val BrandAccent = Color(0xFFCCCCCC)  // Light gray accent
-val DividerColor = Color(0xFF333333)
-val TextSecondary = Color(0xFF999999)
+val BrandBg = Color(0xFFF2F2F7)        // Light gray background
+val BrandCard = Color(0xFFFFFFFF)       // White card
+val BrandAccent = Color(0xFF3A3A3C)     // Dark gray accent
+val DividerColor = Color(0xFFD1D1D6)   // Light divider
+val TextSecondary = Color(0xFF8E8E93)   // iOS-style secondary text
+val TextPrimary = Color(0xFF1C1C1E)     // Near-black primary text
 
 // ============================================================
 //  DATA STRUCTURES
@@ -126,7 +127,7 @@ fun HomeScreen(
             .background(BrandBg)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // --- HOME HEADER (single consolidated bar) ---
+            // --- HOME HEADER ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -134,30 +135,58 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: App title
-                Text(
-                    text = "Horizon",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                // Right: Profile icon
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape)
-                        .clickable { onProfileClick() },
-                    contentAlignment = Alignment.Center
+                // Left: Profile icon + Name column
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.LightGray,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    // Profile avatar
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(BrandAccent.copy(alpha = 0.08f))
+                            .border(1.dp, DividerColor, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = BrandAccent,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Alex Mercer",
+                            color = TextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Horizon Loop",
+                                color = TextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "|",
+                                color = DividerColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "Pro v1.2.0",
+                                color = BrandAccent,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
@@ -184,7 +213,7 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
                             .background(BrandCard)
-                            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                            .border(1.dp, DividerColor, RoundedCornerShape(14.dp))
                             .clickable { onSongClick(song) }
                             .padding(14.dp)
                     ) {
@@ -198,7 +227,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.White.copy(alpha = 0.08f)),
+                                    .background(DividerColor),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -212,18 +241,15 @@ fun HomeScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = song.title,
-                                    color = Color.White,
+                                    color = TextPrimary,
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = song.artist,
                                     color = TextSecondary,
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(top = 2.dp)
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                             // Duration
@@ -250,7 +276,7 @@ fun HomeScreen(
 }
 
 // ============================================================
-//  PROFILE SCREEN — Full Page
+//  PROFILE SCREEN — Full Page (Light Theme)
 // ============================================================
 @Composable
 fun ProfileScreen(
@@ -274,22 +300,23 @@ fun ProfileScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(34.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
+                        .background(BrandAccent.copy(alpha = 0.06f))
+                        .border(1.dp, DividerColor, CircleShape)
                         .clickable { onBack() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.LightGray,
+                        tint = BrandAccent,
                         modifier = Modifier.size(18.dp)
                     )
                 }
                 Text(
                     text = "Settings",
-                    color = Color.White,
+                    color = TextPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -308,7 +335,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
                         .background(BrandCard)
-                        .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                        .border(1.dp, DividerColor, RoundedCornerShape(14.dp))
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -317,7 +344,8 @@ fun ProfileScreen(
                         modifier = Modifier
                             .size(52.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.1f)),
+                            .background(BrandAccent.copy(alpha = 0.08f))
+                            .border(1.dp, DividerColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -330,14 +358,15 @@ fun ProfileScreen(
                     Column {
                         Text(
                             text = "Alex Mercer",
-                            color = Color.White,
+                            color = TextPrimary,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "Student",
                             color = TextSecondary,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -346,7 +375,7 @@ fun ProfileScreen(
                 Column {
                     Text(
                         text = "Groq Platform API Key",
-                        color = Color.White,
+                        color = TextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -357,9 +386,9 @@ fun ProfileScreen(
                         placeholder = { Text("Enter your Groq API key...", fontSize = 12.sp, color = TextSecondary) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = BrandAccent,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            unfocusedBorderColor = DividerColor,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
                             cursorColor = BrandAccent
                         ),
                         modifier = Modifier.fillMaxWidth(),
@@ -371,7 +400,7 @@ fun ProfileScreen(
                 Column {
                     Text(
                         text = "Voice Engine",
-                        color = Color.White,
+                        color = TextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -380,8 +409,8 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
-                            .border(1.dp, BrandAccent.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                            .background(BrandCard)
+                            .border(1.dp, BrandAccent.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
                             .padding(horizontal = 14.dp, vertical = 14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -389,7 +418,7 @@ fun ProfileScreen(
                         Column {
                             Text(
                                 text = "Whisper Large v3",
-                                color = Color.White,
+                                color = TextPrimary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -397,6 +426,7 @@ fun ProfileScreen(
                                 text = "OpenAI Whisper — highest accuracy",
                                 color = TextSecondary,
                                 fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(top = 2.dp)
                             )
                         }
@@ -506,91 +536,149 @@ fun TranslationPlayerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 200.dp) // Leave space for the player card
+                .padding(bottom = 190.dp) // Leave space for the player card
         ) {
             // ================================================================
-            //  CONSOLIDATED HEADER — All icons in ONE unified bar
+            //  RESTRUCTURED HEADER
+            //  Left: Profile avatar + name column + subtitle
+            //  Below: Icon bar with Speed first, then rest
             // ================================================================
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                // Left: Back + Profile Name
+                // --- Top Row: Profile + Back ---
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.06f))
-                            .clickable { onHomeClick() },
-                        contentAlignment = Alignment.Center
+                    // Left: Back button + Profile avatar + Name column
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Home",
-                            tint = Color.LightGray,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        // Back button
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape)
+                                .background(BrandAccent.copy(alpha = 0.06f))
+                                .border(1.dp, DividerColor, CircleShape)
+                                .clickable { onHomeClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Home",
+                                tint = BrandAccent,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        // Profile avatar
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(BrandAccent.copy(alpha = 0.08f))
+                                .border(1.dp, DividerColor, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = BrandAccent,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        // Name + subtitle
+                        Column {
+                            Text(
+                                text = "Alex Mercer",
+                                color = TextPrimary,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Horizon Loop",
+                                    color = TextSecondary,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "|",
+                                    color = DividerColor,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "Pro v1.2.0",
+                                    color = BrandAccent,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
-                    Text(
-                        text = "Alex Mercer",
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
                 }
 
-                // Right: All icons in ONE consolidated bar
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // --- Icon Bar: Speed first, then other icons ---
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Black.copy(alpha = 0.35f))
-                        .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                        .background(BrandCard)
+                        .border(1.dp, DividerColor, RoundedCornerShape(12.dp))
+                        .padding(horizontal = 6.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Speed
+                    // Speed (first)
                     Text(
                         text = "${currentSpeed}x",
                         color = BrandAccent,
-                        fontSize = 9.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(BrandAccent.copy(alpha = 0.08f))
                             .clickable { speedIndex = (speedIndex + 1) % speeds.size }
-                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
                     )
 
-                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     // Mode Toggle
                     IconButton(
                         onClick = {
                             activeView = if (activeView == ActiveView.CLEAN) ActiveView.DIALOGUE else ActiveView.CLEAN
                         },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = if (activeView == ActiveView.DIALOGUE) Icons.Default.Subtitles else Icons.Default.Visibility,
                             contentDescription = "Toggle Mode",
-                            tint = if (activeView == ActiveView.DIALOGUE || activeView == ActiveView.CLEAN) BrandAccent else Color.Gray,
-                            modifier = Modifier.size(16.dp)
+                            tint = if (activeView == ActiveView.DIALOGUE || activeView == ActiveView.CLEAN) BrandAccent else TextSecondary,
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 
-                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     // Loop
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.LOOP },
@@ -604,17 +692,19 @@ fun TranslationPlayerScreen(
                         Icon(
                             imageVector = Icons.Default.Repeat,
                             contentDescription = "Loop",
-                            tint = if (activeView == ActiveView.LOOP) BrandAccent else Color.Gray,
-                            modifier = Modifier.size(16.dp)
+                            tint = if (activeView == ActiveView.LOOP) BrandAccent else TextSecondary,
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 
-                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     // Notes
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
                                 onClick = { activeView = ActiveView.NOTES },
@@ -628,36 +718,38 @@ fun TranslationPlayerScreen(
                         Icon(
                             imageVector = Icons.Default.EditNote,
                             contentDescription = "Notes",
-                            tint = if (activeView == ActiveView.NOTES) BrandAccent else Color.Gray,
-                            modifier = Modifier.size(16.dp)
+                            tint = if (activeView == ActiveView.NOTES) BrandAccent else TextSecondary,
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 
-                    Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Box(modifier = Modifier.width(1.dp).height(18.dp).background(DividerColor))
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     // Send to Translation
                     IconButton(
                         onClick = { /* Navigate to translation */ },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
                             contentDescription = "Send",
                             tint = BrandAccent,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 
                     // Profile
                     IconButton(
                         onClick = { onProfileClick() },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
-                            tint = Color.LightGray,
-                            modifier = Modifier.size(16.dp)
+                            tint = BrandAccent,
+                            modifier = Modifier.size(17.dp)
                         )
                     }
                 }
@@ -679,7 +771,7 @@ fun TranslationPlayerScreen(
                         ) {
                             Text(
                                 text = "\"${dialogueDataset[activeDialogueIndex].en}\"",
-                                color = Color.White,
+                                color = TextPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center
@@ -710,17 +802,17 @@ fun TranslationPlayerScreen(
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(
                                             when {
-                                                isSelected -> BrandAccent.copy(alpha = 0.08f)
-                                                isCurrentPlaying -> Color.White.copy(alpha = 0.03f)
-                                                else -> Color.Transparent
+                                                isSelected -> BrandAccent.copy(alpha = 0.06f)
+                                                isCurrentPlaying -> BrandAccent.copy(alpha = 0.03f)
+                                                else -> BrandCard
                                             }
                                         )
                                         .border(
                                             width = 1.dp,
                                             color = when {
-                                                isSelected -> BrandAccent.copy(alpha = 0.35f)
-                                                isCurrentPlaying -> Color.White.copy(alpha = 0.1f)
-                                                else -> Color.White.copy(alpha = 0.04f)
+                                                isSelected -> BrandAccent.copy(alpha = 0.25f)
+                                                isCurrentPlaying -> BrandAccent.copy(alpha = 0.15f)
+                                                else -> DividerColor
                                             },
                                             shape = RoundedCornerShape(12.dp)
                                         )
@@ -749,14 +841,14 @@ fun TranslationPlayerScreen(
                                             // Timestamp badge
                                             Text(
                                                 text = String.format("%02d:%02d", item.start / 60, item.start % 60),
-                                                color = if (isCurrentPlaying) BrandAccent else Color.Gray,
+                                                color = if (isCurrentPlaying) BrandAccent else TextSecondary,
                                                 fontSize = 9.sp,
                                                 fontFamily = FontFamily.Monospace,
                                                 fontWeight = FontWeight.Black,
                                                 modifier = Modifier
                                                     .background(
-                                                        if (isCurrentPlaying) BrandAccent.copy(alpha = 0.15f)
-                                                        else Color.White.copy(alpha = 0.06f),
+                                                        if (isCurrentPlaying) BrandAccent.copy(alpha = 0.12f)
+                                                        else BrandAccent.copy(alpha = 0.04f),
                                                         RoundedCornerShape(6.dp)
                                                     )
                                                     .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -776,8 +868,8 @@ fun TranslationPlayerScreen(
                                                 Text(
                                                     text = "\"${item.en}\"",
                                                     color = when {
-                                                        isSelected || isCurrentPlaying -> Color.White
-                                                        else -> Color(0xFFCCCCCC)
+                                                        isSelected || isCurrentPlaying -> TextPrimary
+                                                        else -> TextPrimary.copy(alpha = 0.7f)
                                                     },
                                                     fontSize = 13.sp,
                                                     fontWeight = if (isSelected || isCurrentPlaying) FontWeight.Bold else FontWeight.Medium,
@@ -786,8 +878,8 @@ fun TranslationPlayerScreen(
                                                 Text(
                                                     text = "\"${item.bn}\"",
                                                     color = when {
-                                                        isSelected || isCurrentPlaying -> BrandAccent.copy(alpha = 0.9f)
-                                                        else -> Color.Gray
+                                                        isSelected || isCurrentPlaying -> BrandAccent.copy(alpha = 0.85f)
+                                                        else -> TextSecondary
                                                     },
                                                     fontSize = 11.sp,
                                                     fontWeight = if (isSelected || isCurrentPlaying) FontWeight.Bold else FontWeight.Normal,
@@ -803,11 +895,11 @@ fun TranslationPlayerScreen(
                                                 .clip(CircleShape)
                                                 .background(
                                                     if (isSelected) BrandAccent
-                                                    else Color.White.copy(alpha = 0.06f)
+                                                    else BrandAccent.copy(alpha = 0.06f)
                                                 )
                                                 .border(
                                                     1.5.dp,
-                                                    if (isSelected) BrandAccent else Color.White.copy(alpha = 0.15f),
+                                                    if (isSelected) BrandAccent else DividerColor,
                                                     CircleShape
                                                 ),
                                             contentAlignment = Alignment.Center
@@ -815,7 +907,7 @@ fun TranslationPlayerScreen(
                                             Icon(
                                                 imageVector = if (isSelected) Icons.Default.Check else Icons.Default.Add,
                                                 contentDescription = "Select",
-                                                tint = if (isSelected) Color(0xFF121212) else Color.Gray,
+                                                tint = if (isSelected) Color.White else TextSecondary,
                                                 modifier = Modifier.size(16.dp)
                                             )
                                         }
@@ -843,7 +935,7 @@ fun TranslationPlayerScreen(
                                             .fillMaxWidth()
                                             .height(56.dp)
                                             .background(BrandCard)
-                                            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                                            .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
                                             .padding(horizontal = 12.dp, vertical = 8.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
@@ -851,7 +943,7 @@ fun TranslationPlayerScreen(
                                         Column {
                                             Text(
                                                 text = loop.name,
-                                                color = Color.White,
+                                                color = TextPrimary,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -873,8 +965,8 @@ fun TranslationPlayerScreen(
                                                 },
                                                 modifier = Modifier
                                                     .size(28.dp)
-                                                    .background(BrandAccent.copy(alpha = 0.15f), CircleShape)
-                                                    .border(1.dp, BrandAccent.copy(alpha = 0.3f), CircleShape)
+                                                    .background(BrandAccent.copy(alpha = 0.12f), CircleShape)
+                                                    .border(1.dp, BrandAccent.copy(alpha = 0.25f), CircleShape)
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.PlayArrow,
@@ -887,13 +979,13 @@ fun TranslationPlayerScreen(
                                                 onClick = { savedLoops.removeAt(index) },
                                                 modifier = Modifier
                                                     .size(28.dp)
-                                                    .background(Color.White.copy(alpha = 0.05f), CircleShape)
-                                                    .border(1.dp, Color.White.copy(alpha = 0.05f), CircleShape)
+                                                    .background(BrandAccent.copy(alpha = 0.05f), CircleShape)
+                                                    .border(1.dp, DividerColor, CircleShape)
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Delete,
                                                     contentDescription = "Delete loop",
-                                                    tint = Color.Gray,
+                                                    tint = TextSecondary,
                                                     modifier = Modifier.size(15.dp)
                                                 )
                                             }
@@ -913,7 +1005,7 @@ fun TranslationPlayerScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(BrandCard, RoundedCornerShape(12.dp))
-                                        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                                        .border(1.dp, DividerColor, RoundedCornerShape(12.dp))
                                         .padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
@@ -927,7 +1019,7 @@ fun TranslationPlayerScreen(
                                             label = { Text("Loop Name", fontSize = 8.sp) },
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                                                unfocusedBorderColor = DividerColor
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
@@ -940,7 +1032,7 @@ fun TranslationPlayerScreen(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                                                unfocusedBorderColor = DividerColor
                                             ),
                                             modifier = Modifier.width(80.dp)
                                         )
@@ -957,7 +1049,7 @@ fun TranslationPlayerScreen(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                                                unfocusedBorderColor = DividerColor
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
@@ -968,7 +1060,7 @@ fun TranslationPlayerScreen(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = BrandAccent,
-                                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                                                unfocusedBorderColor = DividerColor
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
@@ -983,12 +1075,12 @@ fun TranslationPlayerScreen(
                                                 currentTime = loopStartInput.toIntOrNull() ?: 0
                                                 isPlaying = true
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A2A2A)),
+                                            colors = ButtonDefaults.buttonColors(containerColor = BrandAccent.copy(alpha = 0.08f)),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Icon(Icons.Default.PlayArrow, contentDescription = "Try")
+                                            Icon(Icons.Default.PlayArrow, contentDescription = "Try", tint = BrandAccent)
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("Preview", fontSize = 10.sp)
+                                            Text("Preview", fontSize = 10.sp, color = BrandAccent, fontWeight = FontWeight.Bold)
                                         }
                                         Button(
                                             onClick = {
@@ -1008,11 +1100,11 @@ fun TranslationPlayerScreen(
                                             },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = BrandAccent,
-                                                contentColor = Color(0xFF1A1A1A)
+                                                contentColor = Color.White
                                             ),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Text("Save Loop", fontSize = 10.sp)
+                                            Text("Save Loop", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -1037,14 +1129,14 @@ fun TranslationPlayerScreen(
                                             .fillMaxWidth()
                                             .height(56.dp)
                                             .background(BrandCard)
-                                            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                                            .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
                                             .padding(horizontal = 12.dp, vertical = 8.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
                                             text = note.text,
-                                            color = Color.LightGray,
+                                            color = TextPrimary,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Medium,
                                             maxLines = 1,
@@ -1058,7 +1150,7 @@ fun TranslationPlayerScreen(
                                             Icon(
                                                 imageVector = Icons.Default.Delete,
                                                 contentDescription = "Delete",
-                                                tint = Color.Gray,
+                                                tint = TextSecondary,
                                                 modifier = Modifier.size(15.dp)
                                             )
                                         }
@@ -1077,7 +1169,7 @@ fun TranslationPlayerScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(BrandCard, RoundedCornerShape(12.dp))
-                                        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                                        .border(1.dp, DividerColor, RoundedCornerShape(12.dp))
                                         .padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
@@ -1093,7 +1185,7 @@ fun TranslationPlayerScreen(
                                         placeholder = { Text("Write a study note...", fontSize = 12.sp) },
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = BrandAccent,
-                                            unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                                            unfocusedBorderColor = DividerColor
                                         ),
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -1112,7 +1204,7 @@ fun TranslationPlayerScreen(
                                         },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = BrandAccent,
-                                            contentColor = Color(0xFF1A1A1A)
+                                            contentColor = Color.White
                                         ),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
