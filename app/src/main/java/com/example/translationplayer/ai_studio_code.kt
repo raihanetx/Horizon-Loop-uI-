@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ============================================================
@@ -212,7 +213,7 @@ fun HomeScreen(
                                 Text(
                                     text = song.title,
                                     color = Color.White,
-                                    fontSize = 14.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -220,7 +221,7 @@ fun HomeScreen(
                                 Text(
                                     text = song.artist,
                                     color = TextSecondary,
-                                    fontSize = 11.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     modifier = Modifier.padding(top = 2.dp)
                                 )
@@ -476,6 +477,17 @@ fun TranslationPlayerScreen(
         "Mode:$viewName | Loop: $loopWord | Speed:${currentSpeed}X"
     }
 
+    // Auto-advance currentTime when playing
+    LaunchedEffect(isPlaying, currentSpeed) {
+        if (isPlaying) {
+            while (currentTime < duration) {
+                delay((1000f / currentSpeed).toLong())
+                currentTime = (currentTime + 1).coerceAtMost(duration)
+            }
+            isPlaying = false
+        }
+    }
+
     // Auto Scroll active dialogue line
     LaunchedEffect(activeDialogueIndex) {
         if (activeView == ActiveView.DIALOGUE) {
@@ -656,7 +668,7 @@ fun TranslationPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 4.dp)
+                    .padding(horizontal = 10.dp)
             ) {
                 when (activeView) {
                     ActiveView.CLEAN -> {
